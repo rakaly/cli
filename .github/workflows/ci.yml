@@ -1,0 +1,44 @@
+name: ci
+on:
+  push:
+  schedule:
+  - cron: '00 01 * * *'
+
+jobs:
+  test:
+    name: test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        build:
+        - stable
+        - beta
+        - nightly
+        - macos
+        - win-msvc
+        include:
+        - build: stable
+          os: ubuntu-latest
+          rust: stable
+        - build: beta
+          os: ubuntu-latest
+          rust: beta
+        - build: nightly
+          os: ubuntu-latest
+          rust: nightly
+        - build: macos
+          os: macos-latest
+          rust: stable
+        - build: win-msvc
+          os: windows-latest
+          rust: stable
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        profile: minimal
+        override: true
+    - name: Build
+      run: cargo build --verbose

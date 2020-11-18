@@ -1,0 +1,16 @@
+[package]
+name = "rakaly"
+version = "0.1.0"
+authors = ["Nick Babcock <nbabcock19@hotmail.com>"]
+edition = "2018"
+
+[dependencies]
+eu4save = "0.3"
+imperator-save = "0.1"
+ck3save = "0.1"
+argh = "0.1"
+memmap = "0.7"
+anyhow = "1"
+
+[profile.release]
+lto = "thin"
