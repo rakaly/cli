@@ -489,7 +489,7 @@ dependencies = [
  "eu4save",
  "imperator-save",
  "memmap",
- "openssl",
+ "native-tls",
 ]
 
 [[package]]

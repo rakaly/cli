@@ -16,7 +16,7 @@ anyhow = "1"
 [dev-dependencies]
 attohttpc = "0.16"
 assert_cmd = "1"
-openssl = { version = "0.10", features = ["vendored"] }
+native-tls = { version = "0.2", features = ["vendored"] }
 
 [profile.release]
 lto = "thin"

@@ -40,22 +40,33 @@ jobs:
       env:
         TOKEN_PASSPHRASE: ${{ secrets.TOKEN_PASSPHRASE }}
     - name: Set cross environment variables
+      if: matrix.build != 'macos' && matrix.build != 'win-msvc'
       run: |
         echo "EU4_IRONMAN_TOKENS=/project/assets/tokens/eu4.txt" >> $GITHUB_ENV
         echo "CK3_IRONMAN_TOKENS=/project/assets/tokens/ck3.txt" >> $GITHUB_ENV
         echo "IMPERATOR_TOKENS=/project/assets/tokens/imperator.txt" >> $GITHUB_ENV
     - name: Set cargo environment variables
+      if: matrix.build == 'macos' || matrix.build == 'win-msvc'
+      shell: bash
       run: |
-        echo "EU4_IRONMAN_TOKENS=$(pwd)/assets/tokens/eu4.txt" >> $GITHUB_ENV
-        echo "CK3_IRONMAN_TOKENS=$(pwd)/assets/tokens/ck3.txt" >> $GITHUB_ENV
-        echo "IMPERATOR_TOKENS=$(pwd)/assets/tokens/imperator.txt" >> $GITHUB_ENV
-      if: matrix.build == 'x86_64-apple-darwin' || matrix.build == 'x86_64-pc-windows-msvc'
-    - name: Use Cross
-      if: matrix.build == 'x86_64-apple-darwin' || matrix.build == 'x86_64-pc-windows-msvc'
+        echo "EU4_IRONMAN_TOKENS=$current_dir/assets/tokens/eu4.txt" >> $GITHUB_ENV
+        echo "CK3_IRONMAN_TOKENS=$current_dir/assets/tokens/ck3.txt" >> $GITHUB_ENV
+        echo "IMPERATOR_TOKENS=$current_dir/assets/tokens/imperator.txt" >> $GITHUB_ENV
+      env:
+        current_dir: ${{ github.workspace }}
+    - name: Install Cross
+      if: matrix.build != 'macos' && matrix.build != 'win-msvc'
       run: |
         cargo install cross
         echo "CARGO=cross" >> $GITHUB_ENV
         echo "TARGET=--target ${{ matrix.target }}" >> $GITHUB_ENV
+    - name: Check work
+      run:
+        echo "CARGO=${{ env.CARGO }}"
+        echo "TARGET=${{ env.TARGET }}"
+        echo "EU4_IRONMAN_TOKENS=${{ env.EU4_IRONMAN_TOKENS }}"
+        echo "CK3_IRONMAN_TOKENS=${{ env.CK3_IRONMAN_TOKENS }}"
+        echo "IMPERATOR_TOKENS=${{ env.IMPERATOR_TOKENS }}"
     - name: Build
       run: ${{ env.CARGO }} build --verbose $TARGET
     - name: Test
