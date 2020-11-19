@@ -14,10 +14,9 @@ memmap = "0.7"
 anyhow = "1"
 
 [dev-dependencies]
-rust-s3 = "0.26"
+attohttpc = "0.16"
 assert_cmd = "1"
-predicates = "1"
-tempfile = "3"
+openssl = { version = "0.10", features = ["vendored"] }
 
 [profile.release]
 lto = "thin"
