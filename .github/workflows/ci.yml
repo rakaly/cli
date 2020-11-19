@@ -31,11 +31,18 @@ jobs:
       run: ./assets/ci/decrypt_secret.sh
       env:
         TOKEN_PASSPHRASE: ${{ secrets.TOKEN_PASSPHRASE }}
-    - name: Set environment variables
+    - name: Set cross environment variables
       run: |
-        echo "EU4_IRONMAN_TOKENS=./assets/tokens/eu4.txt" >> $GITHUB_ENV
-        echo "CK3_IRONMAN_TOKENS=./assets/tokens/ck3.txt" >> $GITHUB_ENV
-        echo "IMPERATOR_TOKENS=./assets/tokens/imperator.txt" >> $GITHUB_ENV
+        echo "EU4_IRONMAN_TOKENS=/project/assets/tokens/eu4.txt" >> $GITHUB_ENV
+        echo "CK3_IRONMAN_TOKENS=/project/assets/tokens/ck3.txt" >> $GITHUB_ENV
+        echo "IMPERATOR_TOKENS=/project/assets/tokens/imperator.txt" >> $GITHUB_ENV
+      if: matrix.cargo != ''
+    - name: Set cross environment variables
+      run: |
+        echo "EU4_IRONMAN_TOKENS=$(pwd)/assets/tokens/eu4.txt" >> $GITHUB_ENV
+        echo "CK3_IRONMAN_TOKENS=$(pwd)/assets/tokens/ck3.txt" >> $GITHUB_ENV
+        echo "IMPERATOR_TOKENS=$(pwd)/assets/tokens/imperator.txt" >> $GITHUB_ENV
+      if: matrix.target == ''
     - name: Use Cross
       if: matrix.target != ''
       run: cargo install cross
