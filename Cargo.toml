@@ -12,5 +12,11 @@ argh = "0.1"
 memmap = "0.7"
 anyhow = "1"
 
+[dev-dependencies]
+rust-s3 = "0.26"
+assert_cmd = "1"
+predicates = "1"
+tempfile = "3"
+
 [profile.release]
 lto = "thin"

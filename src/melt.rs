@@ -94,9 +94,9 @@ impl MeltCommand {
             let in_extension = path.extension().unwrap();
             let in_name = path.file_stem().unwrap();
             let mut out_name = in_name.to_owned();
-            out_name.push("_melted");
-            let out_path =
-                path.with_file_name(path.with_file_name(out_name).with_extension(in_extension));
+            out_name.push("_melted.");
+            out_name.push(in_extension);
+            let out_path = path.with_file_name(out_name);
 
             let mut out_file = File::create(&out_path)
                 .with_context(|| format!("Failed to create melted file: {}", out_path.display()))?;

@@ -1,0 +1,2 @@
+[build.env]
+passthrough = [ "EU4_IRONMAN_TOKENS", "CK3_IRONMAN_TOKENS", "IMPERATOR_TOKENS" ]
