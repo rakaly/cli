@@ -23,10 +23,17 @@ jobs:
           target: x86_64-unknown-linux-musl
         - build: macos
           os: macos-latest
+          target: x86_64-apple-darwin
         - build: win-msvc
           os: windows-latest
+          target: x86_64-pc-windows-msvc
     steps:
     - uses: actions/checkout@v2
+    - name: Cache saves
+      uses: actions/cache@v2
+      with:
+        path: assets/saves
+        key: assets/saves
     - name: Decrypt tokens
       run: ./assets/ci/decrypt_secret.sh
       env:
@@ -36,13 +43,6 @@ jobs:
         echo "EU4_IRONMAN_TOKENS=/project/assets/tokens/eu4.txt" >> $GITHUB_ENV
         echo "CK3_IRONMAN_TOKENS=/project/assets/tokens/ck3.txt" >> $GITHUB_ENV
         echo "IMPERATOR_TOKENS=/project/assets/tokens/imperator.txt" >> $GITHUB_ENV
-      if: matrix.cargo != ''
-    - name: Set cross environment variables
-      run: |
-        echo "EU4_IRONMAN_TOKENS=$(pwd)/assets/tokens/eu4.txt" >> $GITHUB_ENV
-        echo "CK3_IRONMAN_TOKENS=$(pwd)/assets/tokens/ck3.txt" >> $GITHUB_ENV
-        echo "IMPERATOR_TOKENS=$(pwd)/assets/tokens/imperator.txt" >> $GITHUB_ENV
-      if: matrix.target == ''
     - name: Use Cross
       if: matrix.target != ''
       run: cargo install cross
