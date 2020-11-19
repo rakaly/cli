@@ -38,4 +38,8 @@ If outputting to stdout is more your style:
 rakaly melt --to-stdout aq.eu4
 ```
 
-Whenever there is a content patch for the supported games, the rakaly-cli will be out of date until the next update. The default behavior of the melt command is to fail when unexpected tokens from the new content is encountered. To make the melt command perserve 
+Whenever there is a content patch for the supported games, the rakaly-cli will be out of date until the next update. The default behavior of the melt command is to fail when unexpected tokens from the new content is encountered. To make the melt command perserve through the tokens and encode them as hexadecimals in the output:
+
+```plain
+rakaly melt --unknown-key stringify aq.eu4
+```

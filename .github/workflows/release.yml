@@ -37,8 +37,14 @@ jobs:
         echo "EU4_IRONMAN_TOKENS=/project/assets/tokens/eu4.txt" >> $GITHUB_ENV
         echo "CK3_IRONMAN_TOKENS=/project/assets/tokens/ck3.txt" >> $GITHUB_ENV
         echo "IMPERATOR_TOKENS=/project/assets/tokens/imperator.txt" >> $GITHUB_ENV
+    - name: Set cargo environment variables
+      run: |
+        echo "EU4_IRONMAN_TOKENS=$(pwd)/assets/tokens/eu4.txt" >> $GITHUB_ENV
+        echo "CK3_IRONMAN_TOKENS=$(pwd)/assets/tokens/ck3.txt" >> $GITHUB_ENV
+        echo "IMPERATOR_TOKENS=$(pwd)/assets/tokens/imperator.txt" >> $GITHUB_ENV
+      if: matrix.build == 'x86_64-apple-darwin' || matrix.build == 'x86_64-pc-windows-msvc'
     - name: Use Cross
-      if: matrix.target != ''
+      if: matrix.build == 'x86_64-apple-darwin' || matrix.build == 'x86_64-pc-windows-msvc'
       run: |
         cargo install cross
         echo "CARGO=cross" >> $GITHUB_ENV
