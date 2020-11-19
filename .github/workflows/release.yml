@@ -39,7 +39,10 @@ jobs:
         echo "IMPERATOR_TOKENS=/project/assets/tokens/imperator.txt" >> $GITHUB_ENV
     - name: Use Cross
       if: matrix.target != ''
-      run: cargo install cross
+      run: |
+        cargo install cross
+        echo "CARGO=cross" >> $GITHUB_ENV
+        echo "TARGET=--target ${{ matrix.target }}" >> $GITHUB_ENV
     - name: Build
       run: ${{ env.CARGO }} build --release --verbose $TARGET
     - name: Stage Release
