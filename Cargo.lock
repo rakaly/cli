@@ -1377,7 +1377,7 @@ dependencies = [
 
 [[package]]
 name = "rakaly"
-version = "0.0.1-pre"
+version = "0.0.1"
 dependencies = [
  "anyhow",
  "argh",
