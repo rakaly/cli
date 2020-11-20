@@ -58,14 +58,13 @@ jobs:
       run: ${{ env.CARGO }} build --release --verbose --target ${{ matrix.target }}
     - name: Stage Release
       shell: bash
-      env:
-        tagged: ${{ github.event.release.tag_name }}
       run: |
-        TAG_NAME=$tagged
-        STAGING="rakaly-${TAG_NAME:1}-${{ matrix.target }}"
+        VERSION="${GITHUB_REF#refs/tags/}"
+        echo "version is $VERSION"
+        STAGING="rakaly-${VERSION:1}-${{ matrix.target }}"
         echo "STAGING DIR: $STAGING"
         mkdir $STAGING 
-        if [ "${{ matrix.os }}" = "windows*" ]; then
+        if [[ "${{ matrix.os }}" = windows* ]]; then
           cp "target/${{ matrix.target }}/release/rakaly.exe" "$STAGING/"
           7z a "$STAGING.zip" "$STAGING"
           echo "ASSET=$STAGING.zip" >> $GITHUB_ENV
