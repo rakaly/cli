@@ -57,7 +57,7 @@ jobs:
     - name: Set release upload URL and release version
       shell: bash
       run: |
-        release_upload_url="$(cat release-upload-url)"
+        release_upload_url="$(cat release-upload-url/release-upload-url)"
         echo "RELEASE_UPLOAD_URL=$release_upload_url" >> $GITHUB_ENV
     - name: Decrypt tokens
       run: ./assets/ci/decrypt_secret.sh
