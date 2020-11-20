@@ -59,7 +59,7 @@ jobs:
       run: ${{ env.CARGO }} build --release --verbose $TARGET
     - name: Stage Release
       shell: bash
-      run:
+      run: |
         TAG_NAME=${{ github.event.release.tag_name }}
         STAGING="rakaly-${TAG_NAME:1}-${{ matrix.target }}"
         mkdir $STAGING 
