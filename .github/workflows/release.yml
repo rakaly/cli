@@ -10,6 +10,7 @@ jobs:
       CARGO: cargo
       TARGET:
     strategy:
+      fail-fast: false
       matrix:
         build:
         - linux-musl
@@ -57,6 +58,7 @@ jobs:
     - name: Build
       run: ${{ env.CARGO }} build --release --verbose $TARGET
     - name: Stage Release
+      shell: bash
       run:
         TAG_NAME=${{ github.event.release.tag_name }}
         STAGING="rakaly-${TAG_NAME:1}-${{ matrix.target }}"
