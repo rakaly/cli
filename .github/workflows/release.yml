@@ -8,12 +8,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Create Release
-      id: create_release
+      id: release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ github.ref }}
+    - name: Save release upload URL to artifact
+      run: echo "${{ steps.release.outputs.upload_url }}" > release-upload-url
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v1
+      with:
+        name: release-upload-url
+        path: release-upload-url
 
   build:
     name: Upload Release Asset
@@ -42,6 +49,16 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+    - name: Get release download URL
+      uses: actions/download-artifact@v1
+      with:
+        name: release-upload-url
+        path: release-upload-url
+    - name: Set release upload URL and release version
+      shell: bash
+      run: |
+        release_upload_url="$(cat release-upload-url)"
+        echo "RELEASE_UPLOAD_URL=$release_upload_url" >> $GITHUB_ENV
     - name: Decrypt tokens
       run: ./assets/ci/decrypt_secret.sh
       env:
@@ -93,7 +110,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        upload_url: ${{ env.RELEASE_UPLOAD_URL }}
         asset_path: ${{ env.ASSET }}
         asset_name: ${{ env.ASSET }}
         asset_content_type: application/octet-stream
