@@ -12,7 +12,7 @@ The Rakaly CLI provides a convenient way of accessing [Rakaly](https://rakaly.co
 
 ## Install
 
- - Go to the [latest releases](https://github.com/nickbabcock/rrrocket/releases/latest)
+ - Go to the [latest releases](https://github.com/rakaly/cli/releases/latest)
  - Download desired build (mac, windows, or linux)
  - Extract
  - (optional): Add to your computers path for easier access
