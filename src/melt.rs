@@ -15,6 +15,10 @@ pub(crate) struct MeltCommand {
     #[argh(option, short = 'u', default = "String::from(\"error\")")]
     unknown_key: String,
 
+    /// specify the format of the input: eu4 | ck3 | rome
+    #[argh(option)]
+    format: Option<String>,
+
     /// file to melt
     #[argh(positional)]
     file: PathBuf,
@@ -49,7 +53,12 @@ fn ck3_failed_resolve(s: &str) -> anyhow::Result<ck3save::FailedResolveStrategy>
 
 impl MeltCommand {
     pub(crate) fn exec(&self) -> anyhow::Result<()> {
-        match self.file.extension() {
+        let format = self
+            .format
+            .as_deref()
+            .or_else(|| self.file.extension().and_then(|x| x.to_str()));
+
+        match format {
             Some(x) if x == "eu4" => {
                 let resolve = eu4_failed_resolve(self.unknown_key.as_str())?;
                 self.melt_game(|d| Ok(eu4save::melt(d, resolve)?))
@@ -69,7 +78,7 @@ impl MeltCommand {
                 Ok(out)
             }),
             _ => Err(anyhow!(
-                "Unrecognized file extension: eu4, ck3, and rome are supported"
+                "Unrecognized format: eu4, ck3, and rome are supported"
             )),
         }
     }

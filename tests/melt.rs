@@ -31,3 +31,18 @@ fn test_eu4_melt_stdout() {
     let (_, enc) = eu4save::Eu4Extractor::extract_save(Cursor::new(stdout)).unwrap();
     assert_eq!(enc, eu4save::Encoding::Text)
 }
+
+#[test]
+fn test_eu4_specify_format() {
+    let file = utils::request("eu4saves-test-cases", "kandy2.bin.eu4");
+    let off_path = file.with_extension("");
+    std::fs::copy(file, &off_path).unwrap();
+
+    let mut cmd = Command::cargo_bin("rakaly").unwrap();
+    let assert = cmd.arg("melt").arg("--to-stdout").arg("--format").arg("eu4").arg(&off_path).assert();
+
+    let out = assert.get_output();
+    let stdout = &out.stdout;
+    let (_, enc) = eu4save::Eu4Extractor::extract_save(Cursor::new(stdout)).unwrap();
+    assert_eq!(enc, eu4save::Encoding::Text)
+}
