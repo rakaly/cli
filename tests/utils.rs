@@ -5,7 +5,10 @@ pub fn request<S: AsRef<str>>(bucket_name: &str, input: S) -> PathBuf {
     let reffed = input.as_ref();
     let cache = Path::new("assets").join("saves").join(reffed);
     if !cache.exists() {
-        let url = format!("https://{}.s3.us-west-002.backblazeb2.com/{}", bucket_name, reffed);
+        let url = format!(
+            "https://{}.s3.us-west-002.backblazeb2.com/{}",
+            bucket_name, reffed
+        );
         let resp = attohttpc::get(&url).send().unwrap();
 
         if !resp.is_success() {

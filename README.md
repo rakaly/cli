@@ -43,3 +43,9 @@ Whenever there is a content patch for the supported games, the rakaly-cli will b
 ```plain
 rakaly melt --unknown-key stringify aq.eu4
 ```
+
+The melter knows how to melt a given file based on its file extension. In the event this heuristic is incorrect, one can explicitly provide the desired format:
+
+```plain
+rakaly melt --format eu4 --to-stdout gamestate
+```
