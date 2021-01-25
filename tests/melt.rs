@@ -39,7 +39,13 @@ fn test_eu4_specify_format() {
     std::fs::copy(file, &off_path).unwrap();
 
     let mut cmd = Command::cargo_bin("rakaly").unwrap();
-    let assert = cmd.arg("melt").arg("--to-stdout").arg("--format").arg("eu4").arg(&off_path).assert();
+    let assert = cmd
+        .arg("melt")
+        .arg("--to-stdout")
+        .arg("--format")
+        .arg("eu4")
+        .arg(&off_path)
+        .assert();
 
     let out = assert.get_output();
     let stdout = &out.stdout;
