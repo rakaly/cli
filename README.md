@@ -44,6 +44,8 @@ Whenever there is a content patch for the supported games, the rakaly-cli will b
 rakaly melt --unknown-key stringify aq.eu4
 ```
 
+When unknown tokens are encountered with the stringify strategy then the unknown tokens are printed to stderr and the exit code is 1.
+
 The melter knows how to melt a given file based on its file extension. In the event this heuristic is incorrect, one can explicitly provide the desired format:
 
 ```plain

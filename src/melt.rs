@@ -2,7 +2,7 @@ use anyhow::{anyhow, Context};
 use argh::FromArgs;
 use jomini::FailedResolveStrategy;
 use memmap::MmapOptions;
-use std::{collections::HashSet, fs::File, io::Write, path::PathBuf};
+use std::{collections::HashSet, fs::File, io::Write, path::PathBuf, writeln};
 
 /// Melt a binary encoded file into the plaintext equivalent.
 #[derive(FromArgs, PartialEq, Debug)]
@@ -35,7 +35,7 @@ fn parse_failed_resolve(s: &str) -> anyhow::Result<FailedResolveStrategy> {
 }
 
 impl MeltCommand {
-    pub(crate) fn exec(&self) -> anyhow::Result<()> {
+    pub(crate) fn exec(&self) -> anyhow::Result<i32> {
         let format = self
             .format
             .as_deref()
@@ -66,7 +66,7 @@ impl MeltCommand {
         }
     }
 
-    fn melt_game<F>(&self, f: F) -> anyhow::Result<()>
+    fn melt_game<F>(&self, f: F) -> anyhow::Result<i32>
     where
         F: Fn(&[u8]) -> anyhow::Result<(Vec<u8>, HashSet<u16>)>,
     {
@@ -75,7 +75,7 @@ impl MeltCommand {
         let in_file =
             File::open(path).with_context(|| format!("Failed to open: {}", path.display()))?;
         let mmap = unsafe { MmapOptions::new().map(&in_file)? };
-        let (out, _tokens) = f(&mmap[..])?;
+        let (out, tokens) = f(&mmap[..])?;
 
         if self.to_stdout {
             // Ignore write errors when writing to stdout so that one can pipe the output
@@ -98,6 +98,11 @@ impl MeltCommand {
             })?;
         }
 
-        Ok(())
+        let status = if tokens.is_empty() { 0 } else { 1 };
+        for token in &tokens {
+            let _ = writeln!(std::io::stderr(), "{:04x}", token);
+        }
+
+        Ok(status)
     }
 }

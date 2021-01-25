@@ -17,17 +17,17 @@ enum GameCommand {
     Melt(crate::melt::MeltCommand),
 }
 
-pub fn run() -> anyhow::Result<()> {
+pub fn run() -> anyhow::Result<i32> {
     let args: RakalyCommand = argh::from_env();
     if args.version {
         println!(env!("CARGO_PKG_VERSION"));
-        Ok(())
+        Ok(0)
     } else if let Some(cmd) = args.cmd {
         match cmd {
             GameCommand::Melt(melt) => melt.exec(),
         }
     } else {
         println!("execute --help to see available options");
-        Ok(())
+        Ok(0)
     }
 }
