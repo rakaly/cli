@@ -7,9 +7,9 @@ publish = false
 
 [dependencies]
 jomini = "0.8"
-eu4save = "0.3"
-imperator-save = "0.1"
-ck3save = "0.1"
+eu4save = "0.4"
+imperator-save = "0.2"
+ck3save = "0.2"
 argh = "0.1"
 memmap = "0.7"
 anyhow = "1"

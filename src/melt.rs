@@ -2,7 +2,7 @@ use anyhow::{anyhow, Context};
 use argh::FromArgs;
 use jomini::FailedResolveStrategy;
 use memmap::MmapOptions;
-use std::{fs::File, io::Write, path::PathBuf};
+use std::{collections::HashSet, fs::File, io::Write, path::PathBuf};
 
 /// Melt a binary encoded file into the plaintext equivalent.
 #[derive(FromArgs, PartialEq, Debug)]
@@ -68,14 +68,14 @@ impl MeltCommand {
 
     fn melt_game<F>(&self, f: F) -> anyhow::Result<()>
     where
-        F: Fn(&[u8]) -> anyhow::Result<Vec<u8>>,
+        F: Fn(&[u8]) -> anyhow::Result<(Vec<u8>, HashSet<u16>)>,
     {
         let path = self.file.as_path();
 
         let in_file =
             File::open(path).with_context(|| format!("Failed to open: {}", path.display()))?;
         let mmap = unsafe { MmapOptions::new().map(&in_file)? };
-        let out = f(&mmap[..])?;
+        let (out, _tokens) = f(&mmap[..])?;
 
         if self.to_stdout {
             // Ignore write errors when writing to stdout so that one can pipe the output
