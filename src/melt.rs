@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Context};
 use argh::FromArgs;
+use jomini::FailedResolveStrategy;
 use memmap::MmapOptions;
 use std::{fs::File, io::Write, path::PathBuf};
 
@@ -24,29 +25,11 @@ pub(crate) struct MeltCommand {
     file: PathBuf,
 }
 
-fn eu4_failed_resolve(s: &str) -> anyhow::Result<eu4save::FailedResolveStrategy> {
+fn parse_failed_resolve(s: &str) -> anyhow::Result<FailedResolveStrategy> {
     match s {
-        "ignore" => Ok(eu4save::FailedResolveStrategy::Ignore),
-        "stringify" => Ok(eu4save::FailedResolveStrategy::Stringify),
-        "error" => Ok(eu4save::FailedResolveStrategy::Error),
-        _ => Err(anyhow!("Unrecognized unknown key strategy")),
-    }
-}
-
-fn imperator_failed_resolve(s: &str) -> anyhow::Result<imperator_save::FailedResolveStrategy> {
-    match s {
-        "ignore" => Ok(imperator_save::FailedResolveStrategy::Ignore),
-        "stringify" => Ok(imperator_save::FailedResolveStrategy::Stringify),
-        "error" => Ok(imperator_save::FailedResolveStrategy::Error),
-        _ => Err(anyhow!("Unrecognized unknown key strategy")),
-    }
-}
-
-fn ck3_failed_resolve(s: &str) -> anyhow::Result<ck3save::FailedResolveStrategy> {
-    match s {
-        "ignore" => Ok(ck3save::FailedResolveStrategy::Ignore),
-        "stringify" => Ok(ck3save::FailedResolveStrategy::Stringify),
-        "error" => Ok(ck3save::FailedResolveStrategy::Error),
+        "ignore" => Ok(FailedResolveStrategy::Ignore),
+        "stringify" => Ok(FailedResolveStrategy::Stringify),
+        "error" => Ok(FailedResolveStrategy::Error),
         _ => Err(anyhow!("Unrecognized unknown key strategy")),
     }
 }
@@ -60,18 +43,18 @@ impl MeltCommand {
 
         match format {
             Some(x) if x == "eu4" => {
-                let resolve = eu4_failed_resolve(self.unknown_key.as_str())?;
+                let resolve = parse_failed_resolve(self.unknown_key.as_str())?;
                 self.melt_game(|d| Ok(eu4save::melt(d, resolve)?))
             }
             Some(x) if x == "ck3" => self.melt_game(|d| {
-                let resolve = ck3_failed_resolve(self.unknown_key.as_str())?;
+                let resolve = parse_failed_resolve(self.unknown_key.as_str())?;
                 let out = ck3save::Melter::new()
                     .with_on_failed_resolve(resolve)
                     .melt(d)?;
                 Ok(out)
             }),
             Some(x) if x == "rome" => self.melt_game(|d| {
-                let resolve = imperator_failed_resolve(self.unknown_key.as_str())?;
+                let resolve = parse_failed_resolve(self.unknown_key.as_str())?;
                 let out = imperator_save::Melter::new()
                     .with_on_failed_resolve(resolve)
                     .melt(d)?;

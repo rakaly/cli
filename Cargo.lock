@@ -488,6 +488,7 @@ dependencies = [
  "ck3save",
  "eu4save",
  "imperator-save",
+ "jomini",
  "memmap",
  "native-tls",
 ]
