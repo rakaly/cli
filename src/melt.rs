@@ -2,7 +2,13 @@ use anyhow::{anyhow, Context};
 use argh::FromArgs;
 use jomini::FailedResolveStrategy;
 use memmap::MmapOptions;
-use std::{collections::HashSet, fs::File, io::Write, path::PathBuf, writeln};
+use std::{
+    collections::HashSet,
+    fs::File,
+    io::Write,
+    path::{Path, PathBuf},
+    writeln,
+};
 
 /// Melt a binary encoded file into the plaintext equivalent.
 #[derive(FromArgs, PartialEq, Debug)]
@@ -91,13 +97,7 @@ impl MeltCommand {
             let _ = std::io::stdout().write_all(&out[..]);
         } else {
             // Else we'll create a sibling file with a _melted suffix
-            let in_extension = path.extension().unwrap();
-            let in_name = path.file_stem().unwrap();
-            let mut out_name = in_name.to_owned();
-            out_name.push("_melted.");
-            out_name.push(in_extension);
-            let out_path = path.with_file_name(out_name);
-
+            let out_path = melted_path(path);
             let mut out_file = File::create(&out_path)
                 .with_context(|| format!("Failed to create melted file: {}", out_path.display()))?;
 
@@ -112,5 +112,34 @@ impl MeltCommand {
         }
 
         Ok(status)
+    }
+}
+
+fn melted_path<T: AsRef<Path>>(p: T) -> PathBuf {
+    let path = p.as_ref();
+    let in_name = path.file_stem().unwrap();
+    let mut out_name = in_name.to_owned();
+    out_name.push("_melted");
+    if let Some(extension) = path.extension() {
+        out_name.push(".");
+        out_name.push(extension);
+    }
+    path.with_file_name(out_name)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn melt_path() {
+        assert_eq!(
+            melted_path("/tmp/a.eu4"),
+            Path::new("/tmp").join("a_melted.eu4")
+        );
+        assert_eq!(
+            melted_path("/tmp/gamestate"),
+            Path::new("/tmp").join("gamestate_melted")
+        );
     }
 }
