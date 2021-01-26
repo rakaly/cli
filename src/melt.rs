@@ -20,6 +20,10 @@ pub(crate) struct MeltCommand {
     #[argh(option)]
     format: Option<String>,
 
+    /// output melted data to the given file
+    #[argh(option, short = 'o')]
+    out: Option<PathBuf>,
+
     /// file to melt
     #[argh(positional)]
     file: PathBuf,
@@ -77,7 +81,11 @@ impl MeltCommand {
         let mmap = unsafe { MmapOptions::new().map(&in_file)? };
         let (out, tokens) = f(&mmap[..])?;
 
-        if self.to_stdout {
+        if let Some(out_path) = self.out.as_ref() {
+            std::fs::write(out_path, &out).with_context(|| {
+                format!("Unable to write to melted file: {}", out_path.display())
+            })?;
+        } else if self.to_stdout {
             // Ignore write errors when writing to stdout so that one can pipe the output
             // to subsequent commands without fail
             let _ = std::io::stdout().write_all(&out[..]);

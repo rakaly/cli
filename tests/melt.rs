@@ -1,8 +1,8 @@
 mod utils;
 
 use assert_cmd::Command;
-use std::io::BufReader;
 use std::{fs::File, io::Cursor};
+use std::{io::BufReader, path::Path};
 
 #[test]
 fn test_eu4_melt() {
@@ -50,5 +50,21 @@ fn test_eu4_specify_format() {
     let out = assert.get_output();
     let stdout = &out.stdout;
     let (_, enc) = eu4save::Eu4Extractor::extract_save(Cursor::new(stdout)).unwrap();
+    assert_eq!(enc, eu4save::Encoding::Text)
+}
+
+#[test]
+fn test_eu4_melt_to_out() {
+    let file = utils::request("eu4saves-test-cases", "kandy2.bin.eu4");
+    let mut cmd = Command::cargo_bin("rakaly").unwrap();
+    let output_path = Path::new("assets").join("saves").join("my_save");
+    cmd.arg("melt")
+        .arg("--out")
+        .arg(&output_path)
+        .arg(&file)
+        .assert()
+        .success();
+    let melted_file = File::open(&output_path).unwrap();
+    let (_, enc) = eu4save::Eu4Extractor::extract_save(BufReader::new(melted_file)).unwrap();
     assert_eq!(enc, eu4save::Encoding::Text)
 }
