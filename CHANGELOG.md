@@ -1,3 +1,9 @@
+## v0.1.2 - 2021-01-26
+
+- Update latest tokens for ck3 and eu4
+- Specify out file with -o/--out
+- Fix bug that didn't allow creating a melted file from an extensionless file
+
 ## v0.1.1 - 2021-01-25
 
 - Update melting logic to correctly melt seeds
