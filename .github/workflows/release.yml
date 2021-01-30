@@ -61,6 +61,7 @@ jobs:
         echo "RELEASE_UPLOAD_URL=$release_upload_url" >> $GITHUB_ENV
     - name: Decrypt tokens
       run: ./assets/ci/decrypt_secret.sh
+      shell: bash
       env:
         TOKEN_PASSPHRASE: ${{ secrets.TOKEN_PASSPHRASE }}
     
