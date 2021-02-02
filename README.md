@@ -6,7 +6,7 @@ The Rakaly CLI provides a convenient way of accessing [Rakaly](https://rakaly.co
 
 ## Features
 
-- ✔ Supports converting (melting) EU4, CK3, and Imperator Rome saves to their plaintext equivalent
+- ✔ Supports converting (melting) EU4, CK3, HOI4, and Imperator Rome saves to their plaintext equivalent
 - ✔ Cross platform: run rakaly-cli on mac, windows, and linux 
 - ✔ Lightweight: Small executable that can be download and ran -- no dependencies 
 
@@ -28,9 +28,9 @@ Rakaly CLI can convert binary encoded saves to their plaintext equivalent in a p
 rakaly melt aq.eu4
 ```
 
-The above example will create a plaintext `aq_melted.eu4` file that one can open up and inspect in a text editor. Moreover, this melted save may be continued in EU4 as if it was a normal game (CK3 and Imperator Rome remain untested in this aspect). 
+The above example will create a plaintext `aq_melted.eu4` file that one can open up and inspect in a text editor. Moreover, this melted save may be continued in EU4 as if it was a normal game (the other games remain untested in this aspect). 
 
-The melt command determines how to interpret the save file by looking at the extension (`.eu4`, `.rome`, or `.ck3`).
+The melt command determines how to interpret the save file by looking at the extension (`.eu4`, `.rome`, `.hoi4`, or `.ck3`).
 
 If outputting to stdout is more your style:
 

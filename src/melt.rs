@@ -22,7 +22,7 @@ pub(crate) struct MeltCommand {
     #[argh(option, short = 'u', default = "String::from(\"error\")")]
     unknown_key: String,
 
-    /// specify the format of the input: eu4 | ck3 | rome
+    /// specify the format of the input: eu4 | ck3 | hoi4 | rome
     #[argh(option)]
     format: Option<String>,
 
