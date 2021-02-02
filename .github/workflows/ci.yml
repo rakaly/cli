@@ -46,6 +46,7 @@ jobs:
         echo "EU4_IRONMAN_TOKENS=/project/assets/tokens/eu4.txt" >> $GITHUB_ENV
         echo "CK3_IRONMAN_TOKENS=/project/assets/tokens/ck3.txt" >> $GITHUB_ENV
         echo "IMPERATOR_TOKENS=/project/assets/tokens/imperator.txt" >> $GITHUB_ENV
+        echo "HOI4_IRONMAN_TOKENS=/project/assets/tokens/hoi4.txt" >> $GITHUB_ENV
     - name: Set cargo environment variables
       if: matrix.build == 'macos' || matrix.build == 'win-msvc'
       shell: bash
@@ -53,6 +54,7 @@ jobs:
         echo "EU4_IRONMAN_TOKENS=$current_dir/assets/tokens/eu4.txt" >> $GITHUB_ENV
         echo "CK3_IRONMAN_TOKENS=$current_dir/assets/tokens/ck3.txt" >> $GITHUB_ENV
         echo "IMPERATOR_TOKENS=$current_dir/assets/tokens/imperator.txt" >> $GITHUB_ENV
+        echo "HOI4_IRONMAN_TOKENS=$current_dir/assets/tokens/hoi4.txt" >> $GITHUB_ENV
       env:
         current_dir: ${{ github.workspace }}
     - name: Install Cross
@@ -68,6 +70,7 @@ jobs:
         echo "EU4_IRONMAN_TOKENS=${{ env.EU4_IRONMAN_TOKENS }}"
         echo "CK3_IRONMAN_TOKENS=${{ env.CK3_IRONMAN_TOKENS }}"
         echo "IMPERATOR_TOKENS=${{ env.IMPERATOR_TOKENS }}"
+        echo "HOI4_IRONMAN_TOKENS=${{ env.HOI4_IRONMAN_TOKENS }}"
     - name: Build
       run: ${{ env.CARGO }} build --verbose $TARGET
     - name: Test

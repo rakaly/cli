@@ -236,6 +236,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "hoi4save"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "53087e63456c18066a3efef3b520f0c4d1760b4e16ad01e1b5044c9d8a3533e7"
+dependencies = [
+ "jomini",
+ "serde",
+]
+
+[[package]]
 name = "http"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -486,6 +496,7 @@ dependencies = [
  "attohttpc",
  "ck3save",
  "eu4save",
+ "hoi4save",
  "imperator-save",
  "jomini",
  "memmap",

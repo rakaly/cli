@@ -70,6 +70,13 @@ impl MeltCommand {
                     .melt(d)?;
                 Ok(out)
             }),
+            Some(x) if x == "hoi4" => self.melt_game(|d| {
+                let resolve = parse_failed_resolve(self.unknown_key.as_str())?;
+                let out = hoi4save::Melter::new()
+                    .with_on_failed_resolve(resolve)
+                    .melt(d)?;
+                Ok(out)
+            }),
             _ => Err(anyhow!(
                 "Unrecognized format: eu4, ck3, and rome are supported"
             )),
