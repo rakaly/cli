@@ -1,3 +1,8 @@
+## v0.2.0 - 2021-02-01
+
+- Initial HOI4 melting support
+- Updated ck3 tokens
+
 ## v0.1.2 - 2021-01-26
 
 - Update latest tokens for ck3 and eu4
