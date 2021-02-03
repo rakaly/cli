@@ -14,11 +14,16 @@ hoi4save = "0.1"
 argh = "0.1"
 memmap = "0.7"
 anyhow = "1"
+flate2 = { version = "1", features = ["zlib-ng-compat"], default-features = false }
+attohttpc = { version = "0.16", features = ["json"] }
+native-tls = { version = "0.2", features = ["vendored"] }
+serde = { version = "1",   features = ["derive"] }
+toml = "0.5"
+directories = "3"
+base64 = "0.13"
 
 [dev-dependencies]
-attohttpc = "0.16"
 assert_cmd = "1"
-native-tls = { version = "0.2", features = ["vendored"] }
 
 [profile.release]
 lto = "thin"

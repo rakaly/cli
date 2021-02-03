@@ -15,6 +15,7 @@ struct RakalyCommand {
 #[argh(subcommand)]
 enum GameCommand {
     Melt(crate::melt::MeltCommand),
+    Upload(crate::upload::UploadCommand),
 }
 
 pub fn run() -> anyhow::Result<i32> {
@@ -25,6 +26,7 @@ pub fn run() -> anyhow::Result<i32> {
     } else if let Some(cmd) = args.cmd {
         match cmd {
             GameCommand::Melt(melt) => melt.exec(),
+            GameCommand::Upload(upload) => upload.exec(),
         }
     } else {
         println!("execute --help to see available options");
