@@ -78,7 +78,7 @@ impl MeltCommand {
                 Ok(out)
             }),
             _ => Err(anyhow!(
-                "Unrecognized format: eu4, ck3, and rome are supported"
+                "Unrecognized format: eu4, ck3, hoi4, and rome are supported"
             )),
         }
     }
