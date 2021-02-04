@@ -62,16 +62,84 @@ jobs:
       run: |
         cargo install cross
         echo "CARGO=cross" >> $GITHUB_ENV
-        echo "TARGET=--target ${{ matrix.target }}" >> $GITHUB_ENV
     - name: Check work
       run:
         echo "CARGO=${{ env.CARGO }}"
-        echo "TARGET=${{ env.TARGET }}"
         echo "EU4_IRONMAN_TOKENS=${{ env.EU4_IRONMAN_TOKENS }}"
         echo "CK3_IRONMAN_TOKENS=${{ env.CK3_IRONMAN_TOKENS }}"
         echo "IMPERATOR_TOKENS=${{ env.IMPERATOR_TOKENS }}"
         echo "HOI4_IRONMAN_TOKENS=${{ env.HOI4_IRONMAN_TOKENS }}"
     - name: Build
-      run: ${{ env.CARGO }} build --verbose $TARGET
+      run: ${{ env.CARGO }} build --verbose --target "${{ matrix.target }}"
     - name: Test
-      run: ${{ env.CARGO }} test --verbose $TARGET
+      run: ${{ env.CARGO }} test --verbose --target "${{ matrix.target }}"
+    - name: Build Release Artifact
+      run: ${{ env.CARGO }} build --release --verbose --target "${{ matrix.target }}"
+    - name: Stage Release
+      shell: bash
+      run: |
+        if [[ ${GITHUB_REF} == "*refs/tags/*" ]]; then
+          VERSION="${GITHUB_REF#refs/tags/}"
+        else
+          VERSION="vnightly"
+        fi
+        echo "version is $VERSION"
+        STAGING="rakaly-${VERSION:1}-${{ matrix.target }}"
+        echo "STAGING DIR: $STAGING"
+        mkdir $STAGING 
+        if [[ "${{ matrix.os }}" = windows* ]]; then
+          cp "target/${{ matrix.target }}/release/rakaly.exe" "$STAGING/"
+          7z a "$STAGING.zip" "$STAGING"
+          echo "ASSET=$STAGING.zip" >> $GITHUB_ENV
+        else
+          strip "target/${{ matrix.target }}/release/rakaly"
+          cp "target/${{ matrix.target }}/release/rakaly" "$STAGING/"
+          tar czf "$STAGING.tar.gz" "$STAGING"
+          echo "ASSET=$STAGING.tar.gz" >> $GITHUB_ENV
+        fi
+    - uses: actions/upload-artifact@v2
+      with:
+        path: ${{ env.ASSET }}
+        name: ${{ env.ASSET }}
+        if-no-files-found: error
+
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/download-artifact@v2
+      with:
+        path: artifacts-temp
+    - name: Flatten artifacts
+      run: |
+        mkdir artifacts
+        find artifacts-temp -type f -exec cp '{}' artifacts/ \;
+        ls -lR artifacts
+    - name: Create Release
+      if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+      uses: actions/github-script@v2
+      with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
+        script: |
+          console.log('environment', process.versions);
+          const fs = require('fs').promises;
+          const { repo: { owner, repo }, sha } = context;
+          console.log({ owner, repo, sha });
+          const tag_name = process.env.GITHUB_REF.split("/")[2];
+          const release = await github.repos.createRelease({
+            owner, repo,
+            tag_name,
+            draft: false,
+            target_commitish: sha
+          });
+          console.log('created release', { release });
+          for (let file of await fs.readdir('artifacts')) {
+            console.log('uploading', file);
+            await github.repos.uploadReleaseAsset({
+              owner, repo,
+              release_id: release.data.id,
+              name: file,
+              data: await fs.readFile(`artifacts/${file}`)
+            });
+          }
