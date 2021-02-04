@@ -36,7 +36,7 @@ impl<'a> UploadClient<'a> {
     fn upload_zip(&self, path: &Path) -> anyhow::Result<NewSave> {
         let file = File::open(path).context("unable to open")?;
         let now = Instant::now();
-        let resp = attohttpc::post(format!("{}/{}", self.base_url, "/api/saves"))
+        let resp = attohttpc::post(format!("{}/{}", self.base_url, "api/saves"))
             .header(AUTHORIZATION, self.format_basic_auth())
             .header(CONTENT_TYPE, "application/zip")
             .file(file)
@@ -70,7 +70,7 @@ impl<'a> UploadClient<'a> {
         );
 
         let now = Instant::now();
-        let resp = attohttpc::post(format!("{}/{}", self.base_url, "/api/saves"))
+        let resp = attohttpc::post(format!("{}/{}", self.base_url, "api/saves"))
             .header(AUTHORIZATION, self.format_basic_auth())
             .header(CONTENT_ENCODING, "gzip")
             .bytes(buffer.as_slice())
