@@ -33,15 +33,21 @@ impl<'a> UploadClient<'a> {
         format!("Basic {}", base64::encode(&auth))
     }
 
+    fn save_url(&self) -> String {
+        let result = format!("{}/{}", self.base_url, "api/saves");
+        log::debug!("save url: {}", &result);
+        result
+    }
+
     fn upload_zip(&self, path: &Path) -> anyhow::Result<NewSave> {
         let file = File::open(path).context("unable to open")?;
         let now = Instant::now();
-        let resp = attohttpc::post(format!("{}/{}", self.base_url, "api/saves"))
+        let resp = attohttpc::post(self.save_url())
             .header(AUTHORIZATION, self.format_basic_auth())
             .header(CONTENT_TYPE, "application/zip")
             .file(file)
             .send()?;
-        println!("uploaded in {}ms", now.elapsed().as_millis());
+        log::info!("uploaded in {}ms", now.elapsed().as_millis());
 
         if resp.is_success() {
             let save_id = resp.json()?;
@@ -62,7 +68,7 @@ impl<'a> UploadClient<'a> {
         let now = Instant::now();
         let mut gz = GzEncoder::new(reader, Compression::new(4));
         gz.read_to_end(&mut buffer).context("unable to compress")?;
-        println!(
+        log::info!(
             "compressed {} bytes to {} in {}ms",
             meta.len(),
             buffer.len(),
@@ -70,12 +76,12 @@ impl<'a> UploadClient<'a> {
         );
 
         let now = Instant::now();
-        let resp = attohttpc::post(format!("{}/{}", self.base_url, "api/saves"))
+        let resp = attohttpc::post(self.save_url())
             .header(AUTHORIZATION, self.format_basic_auth())
             .header(CONTENT_ENCODING, "gzip")
             .bytes(buffer.as_slice())
             .send()?;
-        println!("uploaded in {}ms", now.elapsed().as_millis());
+        log::info!("uploaded in {}ms", now.elapsed().as_millis());
 
         if resp.is_success() {
             let save_id = resp.json()?;

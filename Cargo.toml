@@ -21,6 +21,9 @@ serde = { version = "1",   features = ["derive"] }
 toml = "0.5"
 directories = "3"
 base64 = "0.13"
+fern = "0.6"
+log = "0.4"
+
 
 [dev-dependencies]
 assert_cmd = "1"

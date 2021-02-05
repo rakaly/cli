@@ -1,7 +1,4 @@
-use crate::{
-    config::{default_base_url, default_config_path, read_config},
-    upload_client::UploadClient,
-};
+use crate::{config::{default_base_url, default_config_path, read_config}, log::configure_logger, upload_client::UploadClient};
 use anyhow::anyhow;
 use argh::FromArgs;
 use std::path::PathBuf;
@@ -29,6 +26,8 @@ pub(crate) struct UploadCommand {
 
 impl UploadCommand {
     pub(crate) fn exec(&self) -> anyhow::Result<i32> {
+        configure_logger()?;
+
         let config = self.config.clone().or_else(default_config_path);
         let config = config.map(read_config).transpose()?;
 
