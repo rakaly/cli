@@ -89,14 +89,11 @@ jobs:
         mkdir $STAGING 
         if [[ "${{ matrix.os }}" = windows* ]]; then
           cp "target/${{ matrix.target }}/release/rakaly.exe" "$STAGING/"
-          7z a "$STAGING.zip" "$STAGING"
-          echo "ASSET=$STAGING.zip" >> $GITHUB_ENV
         else
           strip "target/${{ matrix.target }}/release/rakaly"
           cp "target/${{ matrix.target }}/release/rakaly" "$STAGING/"
-          tar czf "$STAGING.tar.gz" "$STAGING"
-          echo "ASSET=$STAGING.tar.gz" >> $GITHUB_ENV
         fi
+        echo "ASSET=$STAGING" >> $GITHUB_ENV
     - uses: actions/upload-artifact@v2
       with:
         path: ${{ env.ASSET }}
@@ -114,7 +111,13 @@ jobs:
     - name: Flatten artifacts
       run: |
         mkdir artifacts
-        find artifacts-temp -type f -exec cp '{}' artifacts/ \;
+        for i in artifacts-temp/*; do
+          if [[ "$i" = *windows* ]]; then
+            7z a "artifacts/$(basename "$i").zip" "$i"
+          else
+            tar czf "artifacts/$(basename "$i").tar.gz" "$i"
+          fi
+        done
         ls -lR artifacts
     - name: Create Release
       if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
