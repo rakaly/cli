@@ -19,6 +19,10 @@ pub(crate) struct UploadCommand {
     #[argh(option, short = 'c')]
     config: Option<PathBuf>,
 
+    /// increase the verbosity of the command.
+    #[argh(switch, short = 'v')]
+    verbose: u8,
+
     /// file to upload
     #[argh(positional)]
     file: PathBuf,
@@ -26,9 +30,10 @@ pub(crate) struct UploadCommand {
 
 impl UploadCommand {
     pub(crate) fn exec(&self) -> anyhow::Result<i32> {
-        configure_logger()?;
+        configure_logger(self.verbose)?;
 
         let config = self.config.clone().or_else(default_config_path);
+        log::debug!("rakaly config file path: {:?}", config);
         let config = config.map(read_config).transpose()?;
 
         let user = self
