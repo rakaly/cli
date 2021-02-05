@@ -1,9 +1,9 @@
 mod cli;
 mod config;
+mod log;
 mod melt;
 mod upload;
 mod upload_client;
-mod log;
 
 fn main() {
     std::process::exit(match cli::run() {

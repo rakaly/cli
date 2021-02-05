@@ -39,12 +39,22 @@ impl<'a> UploadClient<'a> {
         result
     }
 
+    fn upload_file_name(&self, path: &Path) -> anyhow::Result<String> {
+        let file_name = path
+            .file_name()
+            .map(|x| x.to_string_lossy())
+            .ok_or_else(|| anyhow!("unable to retrieve filename from: {}", path.display()))?;
+        log::info!("uploading file: {}", &file_name);
+        Ok(file_name.to_string())
+    }
+
     fn upload_zip(&self, path: &Path) -> anyhow::Result<NewSave> {
         let file = File::open(path).context("unable to open")?;
         let now = Instant::now();
         let resp = attohttpc::post(self.save_url())
             .header(AUTHORIZATION, self.format_basic_auth())
             .header(CONTENT_TYPE, "application/zip")
+            .header("rakaly-filename", self.upload_file_name(path)?)
             .file(file)
             .send()?;
         log::info!("uploaded in {}ms", now.elapsed().as_millis());
@@ -79,6 +89,7 @@ impl<'a> UploadClient<'a> {
         let resp = attohttpc::post(self.save_url())
             .header(AUTHORIZATION, self.format_basic_auth())
             .header(CONTENT_ENCODING, "gzip")
+            .header("rakaly-filename", self.upload_file_name(path)?)
             .bytes(buffer.as_slice())
             .send()?;
         log::info!("uploaded in {}ms", now.elapsed().as_millis());

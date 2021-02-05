@@ -1,4 +1,8 @@
-use crate::{config::{default_base_url, default_config_path, read_config}, log::configure_logger, upload_client::UploadClient};
+use crate::{
+    config::{default_base_url, default_config_path, read_config},
+    log::configure_logger,
+    upload_client::UploadClient,
+};
 use anyhow::anyhow;
 use argh::FromArgs;
 use std::path::PathBuf;
