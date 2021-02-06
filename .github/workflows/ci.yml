@@ -78,7 +78,7 @@ jobs:
     - name: Stage Release
       shell: bash
       run: |
-        if [[ ${GITHUB_REF} == "*refs/tags/*" ]]; then
+        if [[ "${GITHUB_REF}" = *refs/tags/* ]]; then
           VERSION="${GITHUB_REF#refs/tags/}"
         else
           VERSION="vnightly"
@@ -111,14 +111,15 @@ jobs:
     - name: Flatten artifacts
       run: |
         mkdir artifacts
-        for i in artifacts-temp/*; do
+        cd artifacts-temp
+        for i in *; do
           if [[ "$i" = *windows* ]]; then
-            7z a "artifacts/$(basename "$i").zip" "$i"
+            7z a "../artifacts/$(basename "$i").zip" "$i"
           else
-            tar czf "artifacts/$(basename "$i").tar.gz" "$i"
+            tar czf "../artifacts/$(basename "$i").tar.gz" "$i"
           fi
         done
-        ls -lR artifacts
+        ls -lR ../artifacts
     - name: Create Release
       if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
       uses: actions/github-script@v2
