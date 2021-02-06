@@ -119,23 +119,14 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "ck3save"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1292b310d64073290433f0861d5e576a1a310806655ed47346fc50fbf039726e"
+checksum = "258e236f0a688e1a127fbba068f14f7d8a4ebd15a9455d1febb054970ddc77bd"
 dependencies = [
  "jomini",
  "serde",
  "twoway",
  "zip",
-]
-
-[[package]]
-name = "cmake"
-version = "0.1.45"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eb6210b637171dfba4cda12e579ac6dc73f5165ad56133e5d72ef3131f320855"
-dependencies = [
- "cc",
 ]
 
 [[package]]
@@ -177,9 +168,9 @@ checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 
 [[package]]
 name = "eu4save"
-version = "0.4.0"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82317ce7c3c6bd4420ae7fb9b878f57dddc7f65983f2588ceafbb3253b5e2fa6"
+checksum = "4ef78677385a14f65484aa80d8de0cc50a430bac2c2af91b856245ec0f04fe13"
 dependencies = [
  "jomini",
  "once_cell",
@@ -196,7 +187,6 @@ dependencies = [
  "cfg-if",
  "crc32fast",
  "libc",
- "libz-sys",
  "miniz_oxide",
 ]
 
@@ -253,9 +243,9 @@ dependencies = [
 
 [[package]]
 name = "hoi4save"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53087e63456c18066a3efef3b520f0c4d1760b4e16ad01e1b5044c9d8a3533e7"
+checksum = "8020d18b17d777ef0dc84a71693cec854673bd1e9327e9b59afaddf83c881aa0"
 dependencies = [
  "jomini",
  "serde",
@@ -285,9 +275,9 @@ dependencies = [
 
 [[package]]
 name = "imperator-save"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24dfdea8bba2fe2808ab725fd01ed228d332ca455d96750400879a50fc75328b"
+checksum = "8500443c95703404308a1ef1dd0647b2d0cd110937497ccab6f81700d4222ba4"
 dependencies = [
  "jomini",
  "serde",
@@ -303,9 +293,9 @@ checksum = "dd25036021b0de88a0aff6b850051563c6516d0bf53f8638938edbb9de732736"
 
 [[package]]
 name = "jomini"
-version = "0.8.1"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0eb5477cd0b9a4ccd199b6393170f95c92c11f6111e44d47722a5bc75b49bc0f"
+checksum = "3b2a12abee5c71c03a9c049b86dd0d3eda07b3744ca74f143bad6aacc30a1b46"
 dependencies = [
  "jomini_derive",
  "serde",
@@ -332,19 +322,6 @@ name = "libc"
 version = "0.2.85"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ccac4b00700875e6a07c6cde370d44d32fa01c5a65cdd2fca6858c479d28bb3"
-
-[[package]]
-name = "libz-sys"
-version = "1.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "602113192b08db8f38796c4e85c39e960c145965140e918018bcde1952429655"
-dependencies = [
- "cc",
- "cmake",
- "libc",
- "pkg-config",
- "vcpkg",
-]
 
 [[package]]
 name = "log"
@@ -532,7 +509,6 @@ dependencies = [
  "attohttpc",
  "ck3save",
  "eu4save",
- "flate2",
  "hoi4save",
  "imperator-save",
  "jomini",
