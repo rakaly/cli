@@ -1,3 +1,7 @@
+## v0.2.1 - 2021-02-05
+
+- Improved melting support. Won't quote values that aren't quoted in plaintext
+
 ## v0.2.0 - 2021-02-01
 
 - Initial HOI4 melting support
