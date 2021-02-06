@@ -1,3 +1,7 @@
+## v0.2.2 - 2021-02-05
+
+- Fix minor defects in previous release assets (eg: include version string and don't package tempory directory).
+
 ## v0.2.1 - 2021-02-05
 
 - Improved melting support. Won't quote values that aren't quoted in plaintext
