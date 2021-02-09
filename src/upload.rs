@@ -66,9 +66,15 @@ impl UploadCommand {
         };
 
         let path = self.file.as_path();
-        let new_save_id = client.upload(path)?;
-        println!("{}", &new_save_id.save_id);
-        println!("{}/eu4/saves/{}", &base_url, &new_save_id.save_id);
+        let new_save = client.upload(path)?;
+        println!("{}", &new_save.save_id);
+        println!("{}/eu4/saves/{}", &base_url, &new_save.save_id);
+
+        if !new_save.used_save_slot {
+            println!("save slot was not used, {} remaining", new_save.remaining_save_slots);
+        } else {
+            println!("save slot was used, {} remaining", new_save.remaining_save_slots);
+        }
         Ok(0)
     }
 }

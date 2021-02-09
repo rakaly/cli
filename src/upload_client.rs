@@ -12,6 +12,8 @@ use std::{
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub struct NewSave {
     pub save_id: String,
+    pub remaining_save_slots: i32,
+    pub used_save_slot: bool,
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
