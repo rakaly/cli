@@ -1,3 +1,7 @@
+## v0.3.0 - 2021-02-09
+
+- Added a new `upload` command so one can upload saves to Rakaly
+
 ## v0.2.2 - 2021-02-05
 
 - Fix minor defects in previous release assets (eg: include version string and don't package tempory directory).

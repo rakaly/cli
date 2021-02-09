@@ -51,3 +51,24 @@ The melter knows how to melt a given file based on its file extension. In the ev
 ```plain
 rakaly melt --format eu4 --to-stdout gamestate
 ```
+
+### Uploading Save Files
+
+One can upload EU4 saves to Rakaly with:
+
+```bash
+rakaly upload --user $RAKALY_USER --api-key $RAKALY_API_KEY ./path/to/save.eu4
+```
+
+To avoid supplying the credential arguments every time, one can create a config file (let's say `config.toml`):
+
+```toml
+user = "100"
+api_key = "not-a-real-api-key"
+```
+
+And reference it like so
+
+```
+rakaly upload --config config.toml ./path/to/save.eu4
+```
