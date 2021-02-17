@@ -1,3 +1,7 @@
+## v0.3.1 - 2021-02-17
+
+- Update Imperator tokens to support the 2.0 update
+
 ## v0.3.0 - 2021-02-09
 
 - Added a new `upload` command so one can upload saves to Rakaly
