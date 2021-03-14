@@ -150,9 +150,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "ck3save"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "258e236f0a688e1a127fbba068f14f7d8a4ebd15a9455d1febb054970ddc77bd"
+checksum = "eeb61cfd2de859ee12a6ddbe31620ab96b46d6dfd71218aaed1deddfa47784cb"
 dependencies = [
  "jomini",
  "serde",
@@ -245,9 +245,9 @@ checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 
 [[package]]
 name = "eu4save"
-version = "0.4.2"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ef78677385a14f65484aa80d8de0cc50a430bac2c2af91b856245ec0f04fe13"
+checksum = "08b82e280fb71b5a776fcd61c698385ff3160f05e2e2183527b936e2471a6bcf"
 dependencies = [
  "jomini",
  "once_cell",
@@ -341,9 +341,9 @@ dependencies = [
 
 [[package]]
 name = "hoi4save"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8020d18b17d777ef0dc84a71693cec854673bd1e9327e9b59afaddf83c881aa0"
+checksum = "a25a3477f1b2271d97fd496fdda804631c4abaca198002ced9e74fd82d597c95"
 dependencies = [
  "jomini",
  "serde",
@@ -373,9 +373,9 @@ dependencies = [
 
 [[package]]
 name = "imperator-save"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8500443c95703404308a1ef1dd0647b2d0cd110937497ccab6f81700d4222ba4"
+checksum = "99c98b377fb355606e25c7a7fc92818a8172f880fb4a17eeec15f4ae96eca5f9"
 dependencies = [
  "jomini",
  "serde",
@@ -391,9 +391,9 @@ checksum = "dd25036021b0de88a0aff6b850051563c6516d0bf53f8638938edbb9de732736"
 
 [[package]]
 name = "jomini"
-version = "0.9.1"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f18a494691a13f1b8e80f3e99c4bfdf8e09d3957793a57e89f37a2a1fffc111"
+checksum = "3160df32af40cc6412c75913d90c2885c80c2a4eca3b53425a4bf963095dda4a"
 dependencies = [
  "jomini_derive",
  "serde",
