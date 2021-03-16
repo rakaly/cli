@@ -1,3 +1,7 @@
+## v0.3.2 - 2021-03-16
+
+- Update CK3 tokens to support the 1.3 update
+
 ## v0.3.1 - 2021-02-17
 
 - Update Imperator tokens to support the 2.0 update
