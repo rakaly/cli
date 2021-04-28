@@ -1,6 +1,8 @@
 ## v0.3.3 - 2021-04-27
 
-- Update melting logic 
+- Update melting to more accurately decode 64 bit floats (in rare cases large positive numbers could be interpreted as negative)
+- Update melting to support Eu4 Leviathan prehistoric dates
+- Update melting to support alternative Ck3 floating point format 
 - Update tokens to support Eu4 Leviathan
 
 ## v0.3.2 - 2021-03-16
