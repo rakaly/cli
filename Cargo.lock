@@ -127,9 +127,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "ck3save"
-version = "0.2.4"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d34166d4b5f19fea726a8050b3e7fca1ab9ebe360114a6b9a92d7eaa2dfb4db"
+checksum = "5c837888d5511f7b17f457d4dc464de6f93dd3692f78a70c7c633368ba920841"
 dependencies = [
  "jomini",
  "serde",
@@ -321,9 +321,9 @@ dependencies = [
 
 [[package]]
 name = "imperator-save"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "49ac71e6105920a3a02f5788dcc57638895b5f1d233eee6d929653a06cc7ee32"
+checksum = "2beff588523bfa7fee0d733a4dbae1b54e023ce265101da26c6f100af331e572"
 dependencies = [
  "jomini",
  "serde",
