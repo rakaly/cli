@@ -6,7 +6,7 @@
   - Fix melted output containing quotes when plaintext has no quotes
   - Rewrite save header to declare the melted output is uncompressed plaintext
   - Increase accuracy of decoding 64 bit floats (alternative format) from ironman format
-  - Write numbers as integers when ignoring the fractional component would not result in a loss of accuracy just line the plaintext format
+  - Write numbers as integers when ignoring the fractional component would not result in a loss of accuracy just like the plaintext format
   - Identified additional tokens that use the alternative float format
   - Fixed more numbers being interpreted as dates
 
