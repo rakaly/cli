@@ -1,3 +1,15 @@
+## v0.3.5 - 2021-05-03
+
+- Update tokens to support EU4 1.31.2
+- Increase accuracy for melted EU4 64bit floats by up to a 10,000th
+- Significant update to CK3 melting output:
+  - Fix melted output containing quotes when plaintext has no quotes
+  - Rewrite save header to declare the melted output is uncompressed plaintext
+  - Increase accuracy of decoding 64 bit floats (alternative format) from ironman format
+  - Write numbers as integers when ignoring the fractional component would not result in a loss of accuracy just line the plaintext format
+  - Identified additional tokens that use the alternative float format
+  - Fixed more numbers being interpreted as dates
+
 ## v0.3.4 - 2021-04-29
 
 - Update tokens to support EU4 1.31.1
