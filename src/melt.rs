@@ -5,7 +5,7 @@ use memmap::MmapOptions;
 use std::{
     collections::HashSet,
     fs::File,
-    io::Write,
+    io::{stdin, Read, Write},
     path::{Path, PathBuf},
     writeln,
 };
@@ -30,9 +30,9 @@ pub(crate) struct MeltCommand {
     #[argh(option, short = 'o')]
     out: Option<PathBuf>,
 
-    /// file to melt
+    /// file to melt. Omission reads from stdin
     #[argh(positional)]
-    file: PathBuf,
+    file: Option<PathBuf>,
 }
 
 fn parse_failed_resolve(s: &str) -> anyhow::Result<FailedResolveStrategy> {
@@ -46,10 +46,12 @@ fn parse_failed_resolve(s: &str) -> anyhow::Result<FailedResolveStrategy> {
 
 impl MeltCommand {
     pub(crate) fn exec(&self) -> anyhow::Result<i32> {
-        let format = self
-            .format
-            .as_deref()
-            .or_else(|| self.file.extension().and_then(|x| x.to_str()));
+        let format = self.format.as_deref().or_else(|| {
+            self.file
+                .as_deref()
+                .and_then(|x| x.extension())
+                .and_then(|x| x.to_str())
+        });
 
         match format {
             Some(x) if x == "eu4" => {
@@ -87,24 +89,30 @@ impl MeltCommand {
     where
         F: Fn(&[u8]) -> anyhow::Result<(Vec<u8>, HashSet<u16>)>,
     {
-        let path = self.file.as_path();
-
-        let in_file =
-            File::open(path).with_context(|| format!("Failed to open: {}", path.display()))?;
-        let mmap = unsafe { MmapOptions::new().map(&in_file)? };
-        let (out, tokens) = f(&mmap[..])?;
+        let (out, tokens) = if let Some(path) = self.file.as_deref() {
+            let in_file =
+                File::open(&path).with_context(|| format!("Failed to open: {}", path.display()))?;
+            let mmap = unsafe { MmapOptions::new().map(&in_file)? };
+            f(&mmap[..])?
+        } else {
+            let sin = stdin();
+            let mut reader = sin.lock();
+            let mut data = Vec::new();
+            reader.read_to_end(&mut data)?;
+            f(&data[..])?
+        };
 
         if let Some(out_path) = self.out.as_ref() {
             std::fs::write(out_path, &out).with_context(|| {
                 format!("Unable to write to melted file: {}", out_path.display())
             })?;
-        } else if self.to_stdout {
+        } else if self.to_stdout || self.file.is_none() {
             // Ignore write errors when writing to stdout so that one can pipe the output
             // to subsequent commands without fail
             let _ = std::io::stdout().write_all(&out[..]);
         } else {
             // Else we'll create a sibling file with a _melted suffix
-            let out_path = melted_path(path);
+            let out_path = melted_path(self.file.as_deref().unwrap());
             let mut out_file = File::create(&out_path)
                 .with_context(|| format!("Failed to create melted file: {}", out_path.display()))?;
 
