@@ -71,9 +71,15 @@ impl UploadCommand {
         println!("{}/eu4/saves/{}", &base_url, &new_save.save_id);
 
         if !new_save.used_save_slot {
-            println!("save slot was not used, {} remaining", new_save.remaining_save_slots);
+            println!(
+                "save slot was not used, {} remaining",
+                new_save.remaining_save_slots
+            );
         } else {
-            println!("save slot was used, {} remaining", new_save.remaining_save_slots);
+            println!(
+                "save slot was used, {} remaining",
+                new_save.remaining_save_slots
+            );
         }
         Ok(0)
     }
