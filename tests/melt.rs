@@ -68,3 +68,21 @@ fn test_eu4_melt_to_out() {
     let (_, enc) = eu4save::Eu4Extractor::extract_save(BufReader::new(melted_file)).unwrap();
     assert_eq!(enc, eu4save::Encoding::Text)
 }
+
+#[test]
+fn test_eu4_melt_stdin_to_stdout() {
+    let file = utils::request("eu4saves-test-cases", "kandy2.bin.eu4");
+    let mut cmd = Command::cargo_bin("rakaly").unwrap();
+    let assert = cmd
+        .arg("melt")
+        .arg("--format")
+        .arg("eu4")
+        .pipe_stdin(&file)
+        .unwrap()
+        .assert();
+
+    let out = assert.get_output();
+    let stdout = &out.stdout;
+    let (_, enc) = eu4save::Eu4Extractor::extract_save(Cursor::new(stdout)).unwrap();
+    assert_eq!(enc, eu4save::Encoding::Text)
+}
