@@ -30,6 +30,10 @@ pub(crate) struct MeltCommand {
     #[argh(option, short = 'o')]
     out: Option<PathBuf>,
 
+    /// retain binary properties in melted output
+    #[argh(switch)]
+    retain: bool,
+
     /// file to melt. Omission reads from stdin
     #[argh(positional)]
     file: Option<PathBuf>,
@@ -56,12 +60,18 @@ impl MeltCommand {
         match format {
             Some(x) if x == "eu4" => {
                 let resolve = parse_failed_resolve(self.unknown_key.as_str())?;
-                self.melt_game(|d| Ok(eu4save::melt(d, resolve)?))
+                self.melt_game(|d| {
+                    Ok(eu4save::Melter::new()
+                        .with_on_failed_resolve(resolve)
+                        .with_rewrite(!self.retain)
+                        .melt(d)?)
+                })
             }
             Some(x) if x == "ck3" => self.melt_game(|d| {
                 let resolve = parse_failed_resolve(self.unknown_key.as_str())?;
                 let out = ck3save::Melter::new()
                     .with_on_failed_resolve(resolve)
+                    .with_rewrite(!self.retain)
                     .melt(d)?;
                 Ok(out)
             }),
@@ -69,6 +79,7 @@ impl MeltCommand {
                 let resolve = parse_failed_resolve(self.unknown_key.as_str())?;
                 let out = imperator_save::Melter::new()
                     .with_on_failed_resolve(resolve)
+                    .with_rewrite(!self.retain)
                     .melt(d)?;
                 Ok(out)
             }),
@@ -76,6 +87,7 @@ impl MeltCommand {
                 let resolve = parse_failed_resolve(self.unknown_key.as_str())?;
                 let out = hoi4save::Melter::new()
                     .with_on_failed_resolve(resolve)
+                    .with_rewrite(!self.retain)
                     .melt(d)?;
                 Ok(out)
             }),

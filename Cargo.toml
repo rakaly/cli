@@ -7,7 +7,7 @@ publish = false
 
 [dependencies]
 jomini = "0.13"
-eu4save = "0.4"
+eu4save = "0.5"
 imperator-save = "0.2"
 ck3save = "0.2"
 hoi4save = "0.1"
