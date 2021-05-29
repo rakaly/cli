@@ -1,3 +1,9 @@
+## v0.3.7 - 2021-05-28
+
+- Fix missing HOI4 binary tokens in linux build
+- Melt with tabs instead of spaces
+- Melted quoted values are now escaped as needed. A quoted value that contained quotes didn't has the inner quotes escaped, leading to output that could fail to parse.
+
 ## v0.3.6 - 2021-05-18
 
 - Add new `--retain` flag that will not rewrite melted output to conform more to plaintext properties
