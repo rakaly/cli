@@ -2,7 +2,7 @@
 
 - Fix missing HOI4 binary tokens in linux build
 - Melt with tabs instead of spaces
-- Melted quoted values are now escaped as needed. A quoted value that contained quotes didn't has the inner quotes escaped, leading to output that could fail to parse.
+- Melted quoted values are now escaped as needed. A quoted value that contained quotes didn't have the inner quotes escaped, leading to output that could fail to parse.
 
 ## v0.3.6 - 2021-05-18
 
