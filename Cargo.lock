@@ -127,9 +127,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "ck3save"
-version = "0.2.8"
+version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1ace08dc704af6236c5a54ccfd05c2c43a6f13ae016842a706787490dfeac80a"
+checksum = "24724a22d056fccb6237481bdd9403b1a89e3642e496ca9eaae3430d72ae5ac3"
 dependencies = [
  "jomini",
  "serde",
@@ -204,9 +204,9 @@ checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 
 [[package]]
 name = "eu4save"
-version = "0.5.0"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9d320cd3cf0a86293f1966e3f050e7b5dd8035627c2a15a37a93676f1cc8630"
+checksum = "f7d167d3dcacbced3c48cd24a0a2952a5a02b41d184623e5aa55963fdf0d29d3"
 dependencies = [
  "jomini",
  "once_cell",
@@ -289,9 +289,9 @@ dependencies = [
 
 [[package]]
 name = "hoi4save"
-version = "0.1.4"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86a86868ce54993b7455bce9136e755a9ba704aca44245a7492add2d3ed61472"
+checksum = "1e2af796a1878e617025c11e65b7fb94c928a9caba48e35298b718b951ad6d7f"
 dependencies = [
  "jomini",
  "serde",
@@ -321,9 +321,9 @@ dependencies = [
 
 [[package]]
 name = "imperator-save"
-version = "0.2.5"
+version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b02e23122603bcbacda2de708961c38cb947c186e0589d0c6ff712d7b444b1bc"
+checksum = "c047d20ded8686993cc09aff20b6675fb548151a3f60974a550d486a3c46f765"
 dependencies = [
  "jomini",
  "serde",
@@ -338,9 +338,9 @@ checksum = "dd25036021b0de88a0aff6b850051563c6516d0bf53f8638938edbb9de732736"
 
 [[package]]
 name = "jomini"
-version = "0.13.2"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7443cfd03c431823cdcebde12c9b7a5492d2220e5d460244ea2f9dfa81ee2989"
+checksum = "0ba48ee674a70895980223da4f8895a8cef8a794678c222d93e8fa49e6f88b12"
 dependencies = [
  "jomini_derive",
  "serde",
