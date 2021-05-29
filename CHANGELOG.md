@@ -1,3 +1,8 @@
+## v0.3.8 - 2021-05-29
+
+- Fix obscenely large CK3 melted output (introduced in v0.3.7) due to not accounting for hidden objects
+- Fix some array values not being properly indented
+
 ## v0.3.7 - 2021-05-28
 
 - Fix missing HOI4 binary tokens in linux build
