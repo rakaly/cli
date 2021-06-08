@@ -553,7 +553,7 @@ dependencies = [
 
 [[package]]
 name = "rakaly"
-version = "0.3.9-pre"
+version = "0.3.9"
 dependencies = [
  "anyhow",
  "argh",
