@@ -1,3 +1,8 @@
+## v0.3.9 - 2021-06-08
+
+- EU4 dates prior to 5000 BC can now be melted properly and not cause an error
+- EU4 dates that would cause an error going forward are ignored unless `--unknown-key error` is provided
+
 ## v0.3.8 - 2021-05-29
 
 - Fix obscenely large CK3 melted output (introduced in v0.3.7) due to not accounting for hidden objects
