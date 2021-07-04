@@ -6,7 +6,7 @@ edition = "2018"
 publish = false
 
 [dependencies]
-jomini = "0.14"
+jomini = "0.16"
 eu4save = "0.5"
 imperator-save = "0.2"
 ck3save = "0.2"
