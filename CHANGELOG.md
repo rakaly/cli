@@ -1,3 +1,7 @@
+## v0.3.11 - 2021-07-10
+
+- Fix HOI4 saves not melting correctly when `operatives` is present and decoded incorrectly.
+
 ## v0.3.10 - 2021-07-04
 
 - Fix improper melted output when a name ended with a quote
