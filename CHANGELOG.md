@@ -1,3 +1,8 @@
+## v0.3.12 - 2021-07-25
+
+- Support melting dates that have a zero year
+- Support melting files that are missing a file name (eg: `.eu4`)
+
 ## v0.3.11 - 2021-07-10
 
 - Fix HOI4 saves not melting correctly when `operatives` is present and decoded incorrectly.
