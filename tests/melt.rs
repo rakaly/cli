@@ -91,10 +91,29 @@ fn test_eu4_melt_stdin_to_stdout() {
 fn test_eu4_melt_retain() {
     let file = utils::request("eu4saves-test-cases", "kandy2.bin.eu4");
     let mut cmd = Command::cargo_bin("rakaly").unwrap();
-    let assert = cmd.arg("melt").arg("--retain").arg("--to-stdout").arg(&file).assert();
+    let assert = cmd
+        .arg("melt")
+        .arg("--retain")
+        .arg("--to-stdout")
+        .arg(&file)
+        .assert();
 
     let out = assert.get_output();
     let stdout = &out.stdout;
     let (_, enc) = eu4save::Eu4Extractor::extract_save(Cursor::new(stdout)).unwrap();
     assert_eq!(enc, eu4save::Encoding::Text)
+}
+
+#[test]
+fn test_eu4_no_filename() {
+    let file = utils::request("eu4saves-test-cases", "kandy2.bin.eu4");
+    let off_path = file.with_file_name(".eu4");
+    std::fs::copy(&file, &off_path).unwrap();
+
+    let mut cmd = Command::cargo_bin("rakaly").unwrap();
+    let assert = cmd.arg("melt").arg(&off_path).assert();
+    assert.success();
+
+    let melted_path = file.with_file_name("melted.eu4");
+    assert!(melted_path.exists());
 }

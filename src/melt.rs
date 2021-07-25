@@ -4,6 +4,7 @@ use jomini::FailedResolveStrategy;
 use memmap::MmapOptions;
 use std::{
     collections::HashSet,
+    ffi::OsString,
     fs::File,
     io::{stdin, Read, Write},
     path::{Path, PathBuf},
@@ -55,6 +56,13 @@ impl MeltCommand {
                 .as_deref()
                 .and_then(|x| x.extension())
                 .and_then(|x| x.to_str())
+                .or_else(|| {
+                    self.file
+                        .as_deref()
+                        .and_then(|x| x.file_name())
+                        .and_then(|x| x.to_str())
+                        .map(|x| x.trim_matches('.'))
+                })
         });
 
         match format {
@@ -145,8 +153,17 @@ impl MeltCommand {
 fn melted_path<T: AsRef<Path>>(p: T) -> PathBuf {
     let path = p.as_ref();
     let in_name = path.file_stem().unwrap();
-    let mut out_name = in_name.to_owned();
-    out_name.push("_melted");
+    let mut out_name = if path.extension().is_none() && in_name.to_string_lossy().starts_with('.') {
+        let mut res = OsString::new();
+        res.push("melted");
+        res.push(in_name);
+        res
+    } else {
+        let mut res = in_name.to_owned();
+        res.push("_melted");
+        res
+    };
+
     if let Some(extension) = path.extension() {
         out_name.push(".");
         out_name.push(extension);
