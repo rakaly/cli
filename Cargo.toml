@@ -19,14 +19,14 @@ attohttpc = { version = "0.17", features = ["json"] }
 native-tls = { version = "0.2", features = ["vendored"] }
 serde = { version = "1",   features = ["derive"] }
 toml = "0.5"
-directories = "3"
+directories = "4"
 base64 = "0.13"
 fern = "0.6"
 log = "0.4"
 
 
 [dev-dependencies]
-assert_cmd = "1"
+assert_cmd = "2"
 
 [profile.release]
 lto = "thin"
