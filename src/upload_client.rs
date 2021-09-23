@@ -1,10 +1,9 @@
 use anyhow::{anyhow, bail, Context};
 use attohttpc::header::{AUTHORIZATION, CONTENT_ENCODING, CONTENT_TYPE};
-use flate2::{bufread::GzEncoder, Compression};
 use serde::Deserialize;
 use std::{
     fs::File,
-    io::{BufReader, Read},
+    io::{BufReader, Cursor, Read, Seek, Write},
     path::Path,
     time::Instant,
 };
@@ -52,12 +51,25 @@ impl<'a> UploadClient<'a> {
 
     fn upload_zip(&self, path: &Path) -> anyhow::Result<NewSave> {
         let file = File::open(path).context("unable to open")?;
+        let meta = file.metadata().context("unable to get metadata")?;
+
+        let reader = BufReader::new(file);
+        let now = Instant::now();
+        let buffer = recompress(reader, meta.len() as usize)?;
+        log::info!(
+            "compressed {} bytes to {} in {}ms",
+            meta.len(),
+            buffer.len(),
+            now.elapsed().as_millis()
+        );
+
         let now = Instant::now();
         let resp = attohttpc::post(self.save_url())
             .header(AUTHORIZATION, self.format_basic_auth())
-            .header(CONTENT_TYPE, "application/zip")
+            .header(CONTENT_ENCODING, "br")
+            .header(CONTENT_TYPE, "application/x-tar")
             .header("rakaly-filename", self.upload_file_name(path)?)
-            .file(file)
+            .bytes(buffer)
             .send()?;
         log::info!("uploaded in {}ms", now.elapsed().as_millis());
 
@@ -74,12 +86,13 @@ impl<'a> UploadClient<'a> {
         let file = File::open(path).context("unable to open")?;
         let meta = file.metadata().context("unable to get metadata")?;
 
-        let reader = BufReader::new(file);
-        let mut buffer = Vec::new();
+        let mut reader = BufReader::new(file);
+        let buffer = Vec::with_capacity(meta.len() as usize / 10);
+        let mut compressor = new_brotli(Cursor::new(buffer));
 
         let now = Instant::now();
-        let mut gz = GzEncoder::new(reader, Compression::new(4));
-        gz.read_to_end(&mut buffer).context("unable to compress")?;
+        std::io::copy(&mut reader, &mut compressor).context("unable to compress")?;
+        let buffer = compressor.into_inner().into_inner();
         log::info!(
             "compressed {} bytes to {} in {}ms",
             meta.len(),
@@ -90,7 +103,8 @@ impl<'a> UploadClient<'a> {
         let now = Instant::now();
         let resp = attohttpc::post(self.save_url())
             .header(AUTHORIZATION, self.format_basic_auth())
-            .header(CONTENT_ENCODING, "gzip")
+            .header(CONTENT_ENCODING, "br")
+            .header(CONTENT_TYPE, "text/plain")
             .header("rakaly-filename", self.upload_file_name(path)?)
             .bytes(buffer.as_slice())
             .send()?;
@@ -118,10 +132,10 @@ impl<'a> UploadClient<'a> {
 
         match magic {
             [0x50, 0x4b, 0x03, 0x04] => self
-                .upload_zip(&path)
+                .upload_zip(path)
                 .with_context(|| format!("unable to upload zip: {}", path_display)),
             [b'E', b'U', b'4', b't'] => self
-                .upload_txt(&path)
+                .upload_txt(path)
                 .with_context(|| format!("unable to upload txt: {}", path_display)),
             x => Err(anyhow!(
                 "unexpected file signature: {:?} - {}",
@@ -130,4 +144,33 @@ impl<'a> UploadClient<'a> {
             )),
         }
     }
+}
+
+fn new_brotli<W: Write>(writer: W) -> brotli::CompressorWriter<W> {
+    brotli::CompressorWriter::new(writer, 4096, 9, 22)
+}
+
+pub fn recompress<R>(reader: R, size: usize) -> anyhow::Result<Vec<u8>>
+where
+    R: Read + Seek,
+{
+    let mut zip = zip::ZipArchive::new(reader).unwrap();
+    let out = Vec::with_capacity(size / 2);
+
+    let compressor = new_brotli(out);
+    let mut archive = tar::Builder::new(compressor);
+
+    for index in 0..zip.len() {
+        let file = zip.by_index(index)?;
+        let mut header = tar::Header::new_gnu();
+        header.set_path(file.name())?;
+        header.set_size(file.size());
+        header.set_mtime(0);
+        header.set_cksum();
+        archive.append(&header, file)?;
+    }
+
+    archive.finish()?;
+    let data = archive.into_inner()?.into_inner();
+    Ok(data)
 }
