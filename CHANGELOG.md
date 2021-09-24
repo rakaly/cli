@@ -1,3 +1,8 @@
+## v0.3.13 - 2021-09-24
+
+- Up to 15% performance improvement when melting saves
+- Uploaded saves now take advantage of Rakaly's new storage format
+
 ## v0.3.12 - 2021-07-25
 
 - Support melting dates that have a zero year
