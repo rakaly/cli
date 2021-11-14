@@ -1,3 +1,7 @@
+## v0.3.14 - 2021-11-14
+
+- Update tokens to support new EU4 1.32 additions
+
 ## v0.3.13 - 2021-09-24
 
 - Up to 15% performance improvement when melting saves
