@@ -1,3 +1,8 @@
+## v0.3.15 - 2021-11-24
+
+- Update tokens to support new HOI4 1.11 additions
+- Detect and melt known HOI4 dates correctly
+
 ## v0.3.14 - 2021-11-14
 
 - Update tokens to support new EU4 1.32 additions
