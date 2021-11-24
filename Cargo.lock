@@ -335,9 +335,9 @@ dependencies = [
 
 [[package]]
 name = "hoi4save"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81f488542a27f30c8561caec496429734e60ee6652bed766e9f5e93848ffd57e"
+checksum = "b83fcd7db71013cc05f9861bdc772f747d78e366699d655c076223cb843a47f3"
 dependencies = [
  "jomini",
  "serde",
