@@ -165,9 +165,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "ck3save"
-version = "0.2.11"
+version = "0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c883ac5c6dbb3e51d3856008e2c998b3296d57d6aa8fe73cc02025778f89f87"
+checksum = "a3bc057fddadf0ecef12d9f6a70b6c6874b03f5681eef968d15b6deda9c1224f"
 dependencies = [
  "jomini",
  "serde",
@@ -239,9 +239,9 @@ checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
 name = "eu4save"
-version = "0.5.3"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3999519e021692ea87e840b8e30d303402eae1347b67c2030bd784bf240a7d8"
+checksum = "fccd0a26b0e4d71aa2811a3fd5661942a1d0c47fb5f71be5aba7fb297257c119"
 dependencies = [
  "jomini",
  "once_cell",
@@ -335,9 +335,9 @@ dependencies = [
 
 [[package]]
 name = "hoi4save"
-version = "0.1.7"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b83fcd7db71013cc05f9861bdc772f747d78e366699d655c076223cb843a47f3"
+checksum = "267f861faa547084e68733a120421d80e47fb136a905d8f4027f722fb0674228"
 dependencies = [
  "jomini",
  "serde",
@@ -367,9 +367,9 @@ dependencies = [
 
 [[package]]
 name = "imperator-save"
-version = "0.2.7"
+version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e16910112cc2b321a1855c762031e1ab981f9bf2116bdaffe7406c8a741b2d7"
+checksum = "17bff072bd99f8d72007d837f41a6242a8c0d065e5afdc5e32bbea19b8384cd3"
 dependencies = [
  "jomini",
  "serde",
@@ -393,9 +393,9 @@ checksum = "b71991ff56294aa922b450139ee08b3bfc70982c6b2c7562771375cf73542dd4"
 
 [[package]]
 name = "jomini"
-version = "0.16.4"
+version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "384eb9d2415aeaaf18ec9cac341262c3d6a52fa7553232ce134f61ecfed31def"
+checksum = "727d2dad092c91afd844ddc524b8ba2c2b8bb4d6bc86099a65d00ba266d20e75"
 dependencies = [
  "jomini_derive",
  "serde",
