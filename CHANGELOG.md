@@ -1,3 +1,8 @@
+## v0.3.16 - 2021-02-22
+
+- Support CK3 1.5 saves
+- Support EU4 1.33 saves
+
 ## v0.3.15 - 2021-11-24
 
 - Update tokens to support new HOI4 1.11 additions
