@@ -1,3 +1,7 @@
+## v0.3.17 - 2021-03-06
+
+- Support HOI4 1.11.8 saves
+
 ## v0.3.16 - 2021-02-22
 
 - Support CK3 1.5 saves
