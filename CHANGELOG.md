@@ -1,3 +1,7 @@
+## v0.3.18 - 2022-03-20
+
+- Update EU4 melted output to be compatible with loading the save from the in game menu by not containing a terminating newline
+
 ## v0.3.17 - 2021-03-06
 
 - Support HOI4 1.11.8 saves
