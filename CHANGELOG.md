@@ -1,3 +1,7 @@
+## v0.3.19 - 2022-06-01
+
+- Support CK3 1.6 saves
+
 ## v0.3.18 - 2022-03-20
 
 - Update EU4 melted output to be compatible with loading the save from the in game menu by not containing a terminating newline
