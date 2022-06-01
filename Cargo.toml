@@ -15,7 +15,7 @@ argh = "0.1"
 memmap = "0.7"
 anyhow = "1"
 brotli = "3"
-attohttpc = { version = "0.18", features = ["json"] }
+attohttpc = { version = "0.19", features = ["json"] }
 native-tls = { version = "0.2", features = ["vendored"] }
 serde = { version = "1",   features = ["derive"] }
 toml = "0.5"
