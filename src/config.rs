@@ -13,7 +13,7 @@ pub struct RakalyConfig {
 }
 
 pub fn default_base_url() -> String {
-    String::from("https://rakaly.com")
+    String::from("https://pdx.tools")
 }
 
 pub fn read_config<P: AsRef<Path>>(location: P) -> anyhow::Result<RakalyConfig> {
