@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context};
 use argh::FromArgs;
-use jomini::FailedResolveStrategy;
+use ck3save::FailedResolveStrategy;
 use memmap::MmapOptions;
 use std::{
     collections::HashSet,
@@ -49,6 +49,33 @@ fn parse_failed_resolve(s: &str) -> anyhow::Result<FailedResolveStrategy> {
     }
 }
 
+enum MeltedDocument {
+    Eu4(eu4save::MeltedDocument),
+    Imperator(imperator_save::MeltedDocument),
+    Hoi4(hoi4save::MeltedDocument),
+    Ck3(ck3save::MeltedDocument),
+}
+
+impl MeltedDocument {
+    pub fn data(&self) -> &[u8] {
+        match self {
+            MeltedDocument::Eu4(x) => x.data(),
+            MeltedDocument::Imperator(x) => x.data(),
+            MeltedDocument::Hoi4(x) => x.data(),
+            MeltedDocument::Ck3(x) => x.data(),
+        }
+    }
+
+    pub fn unknown_tokens(&self) -> &HashSet<u16> {
+        match self {
+            MeltedDocument::Eu4(x) => x.unknown_tokens(),
+            MeltedDocument::Imperator(x) => x.unknown_tokens(),
+            MeltedDocument::Hoi4(x) => x.unknown_tokens(),
+            MeltedDocument::Ck3(x) => x.unknown_tokens(),
+        }
+    }
+}
+
 impl MeltCommand {
     pub(crate) fn exec(&self) -> anyhow::Result<i32> {
         let format = self.format.as_deref().or_else(|| {
@@ -66,38 +93,56 @@ impl MeltCommand {
         });
 
         match format {
-            Some(x) if x == "eu4" => {
+            Some(x) if x == "eu4" => self.melt_game(|d| {
                 let resolve = parse_failed_resolve(self.unknown_key.as_str())?;
-                self.melt_game(|d| {
-                    Ok(eu4save::Melter::new()
-                        .with_on_failed_resolve(resolve)
-                        .with_rewrite(!self.retain)
-                        .melt(d)?)
-                })
-            }
+                let file = eu4save::Eu4File::from_slice(d)?;
+                let mut zip_sink = Vec::new();
+                let parsed_file = file.parse(&mut zip_sink)?;
+                let binary = parsed_file.as_binary().context("not eu4 binary")?;
+                let out = binary
+                    .melter()
+                    .on_failed_resolve(resolve)
+                    .verbatim(self.retain)
+                    .melt(&eu4save::EnvTokens)?;
+                Ok(MeltedDocument::Eu4(out))
+            }),
             Some(x) if x == "ck3" => self.melt_game(|d| {
                 let resolve = parse_failed_resolve(self.unknown_key.as_str())?;
-                let out = ck3save::Melter::new()
-                    .with_on_failed_resolve(resolve)
-                    .with_rewrite(!self.retain)
-                    .melt(d)?;
-                Ok(out)
+                let file = ck3save::Ck3File::from_slice(d)?;
+                let mut zip_sink = Vec::new();
+                let parsed_file = file.parse(&mut zip_sink)?;
+                let binary = parsed_file.as_binary().context("not ck3 binary")?;
+                let out = binary
+                    .melter()
+                    .on_failed_resolve(resolve)
+                    .verbatim(self.retain)
+                    .melt(&eu4save::EnvTokens)?;
+                Ok(MeltedDocument::Ck3(out))
             }),
             Some(x) if x == "rome" => self.melt_game(|d| {
                 let resolve = parse_failed_resolve(self.unknown_key.as_str())?;
-                let out = imperator_save::Melter::new()
-                    .with_on_failed_resolve(resolve)
-                    .with_rewrite(!self.retain)
-                    .melt(d)?;
-                Ok(out)
+                let file = imperator_save::ImperatorFile::from_slice(d)?;
+                let mut zip_sink = Vec::new();
+                let parsed_file = file.parse(&mut zip_sink)?;
+                let binary = parsed_file.as_binary().context("not imperator binary")?;
+                let out = binary
+                    .melter()
+                    .on_failed_resolve(resolve)
+                    .verbatim(self.retain)
+                    .melt(&eu4save::EnvTokens)?;
+                Ok(MeltedDocument::Imperator(out))
             }),
             Some(x) if x == "hoi4" => self.melt_game(|d| {
                 let resolve = parse_failed_resolve(self.unknown_key.as_str())?;
-                let out = hoi4save::Melter::new()
-                    .with_on_failed_resolve(resolve)
-                    .with_rewrite(!self.retain)
-                    .melt(d)?;
-                Ok(out)
+                let file = hoi4save::Hoi4File::from_slice(d)?;
+                let parsed_file = file.parse()?;
+                let binary = parsed_file.as_binary().context("not hoi4 binary")?;
+                let out = binary
+                    .melter()
+                    .on_failed_resolve(resolve)
+                    .verbatim(self.retain)
+                    .melt(&eu4save::EnvTokens)?;
+                Ok(MeltedDocument::Hoi4(out))
             }),
             _ => Err(anyhow!(
                 "Unrecognized format: eu4, ck3, hoi4, and rome are supported"
@@ -107,9 +152,9 @@ impl MeltCommand {
 
     fn melt_game<F>(&self, f: F) -> anyhow::Result<i32>
     where
-        F: Fn(&[u8]) -> anyhow::Result<(Vec<u8>, HashSet<u16>)>,
+        F: Fn(&[u8]) -> anyhow::Result<MeltedDocument>,
     {
-        let (out, tokens) = if let Some(path) = self.file.as_deref() {
+        let out = if let Some(path) = self.file.as_deref() {
             let in_file =
                 File::open(&path).with_context(|| format!("Failed to open: {}", path.display()))?;
             let mmap = unsafe { MmapOptions::new().map(&in_file)? };
@@ -123,26 +168,26 @@ impl MeltCommand {
         };
 
         if let Some(out_path) = self.out.as_ref() {
-            std::fs::write(out_path, &out).with_context(|| {
+            std::fs::write(out_path, out.data()).with_context(|| {
                 format!("Unable to write to melted file: {}", out_path.display())
             })?;
         } else if self.to_stdout || self.file.is_none() {
             // Ignore write errors when writing to stdout so that one can pipe the output
             // to subsequent commands without fail
-            let _ = std::io::stdout().write_all(&out[..]);
+            let _ = std::io::stdout().write_all(out.data());
         } else {
             // Else we'll create a sibling file with a _melted suffix
             let out_path = melted_path(self.file.as_deref().unwrap());
             let mut out_file = File::create(&out_path)
                 .with_context(|| format!("Failed to create melted file: {}", out_path.display()))?;
 
-            out_file.write_all(&out[..]).with_context(|| {
+            out_file.write_all(out.data()).with_context(|| {
                 format!("Failed to write to melted file: {}", out_path.display())
             })?;
         }
 
-        let status = if tokens.is_empty() { 0 } else { 1 };
-        for token in &tokens {
+        let status = if out.unknown_tokens().is_empty() { 0 } else { 1 };
+        for token in out.unknown_tokens() {
             let _ = writeln!(std::io::stderr(), "{:04x}", token);
         }
 

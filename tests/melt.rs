@@ -1,8 +1,7 @@
 mod utils;
 
 use assert_cmd::Command;
-use std::{fs::File, io::Cursor};
-use std::{io::BufReader, path::Path};
+use std::path::Path;
 
 #[test]
 fn test_eu4_melt() {
@@ -15,9 +14,10 @@ fn test_eu4_melt() {
     let melted_path = file.with_file_name("kandy2.bin_melted.eu4");
     assert!(melted_path.exists());
 
-    let melted_file = File::open(&melted_path).unwrap();
-    let (_, enc) = eu4save::Eu4Extractor::extract_save(BufReader::new(melted_file)).unwrap();
-    assert_eq!(enc, eu4save::Encoding::Text)
+    let data = std::fs::read(&melted_path).unwrap();
+    let file = eu4save::Eu4File::from_slice(&data).unwrap();
+    let _save = file.deserializer().build_save(&eu4save::EnvTokens).unwrap();
+    assert_eq!(file.encoding(), eu4save::Encoding::Text)
 }
 
 #[test]
@@ -27,9 +27,9 @@ fn test_eu4_melt_stdout() {
     let assert = cmd.arg("melt").arg("--to-stdout").arg(&file).assert();
 
     let out = assert.get_output();
-    let stdout = &out.stdout;
-    let (_, enc) = eu4save::Eu4Extractor::extract_save(Cursor::new(stdout)).unwrap();
-    assert_eq!(enc, eu4save::Encoding::Text)
+    let file = eu4save::Eu4File::from_slice(&out.stdout).unwrap();
+    let _save = file.deserializer().build_save(&eu4save::EnvTokens).unwrap();
+    assert_eq!(file.encoding(), eu4save::Encoding::Text)
 }
 
 #[test]
@@ -48,9 +48,9 @@ fn test_eu4_specify_format() {
         .assert();
 
     let out = assert.get_output();
-    let stdout = &out.stdout;
-    let (_, enc) = eu4save::Eu4Extractor::extract_save(Cursor::new(stdout)).unwrap();
-    assert_eq!(enc, eu4save::Encoding::Text)
+    let file = eu4save::Eu4File::from_slice(&out.stdout).unwrap();
+    let _save = file.deserializer().build_save(&eu4save::EnvTokens).unwrap();
+    assert_eq!(file.encoding(), eu4save::Encoding::Text)
 }
 
 #[test]
@@ -64,9 +64,11 @@ fn test_eu4_melt_to_out() {
         .arg(&file)
         .assert()
         .success();
-    let melted_file = File::open(&output_path).unwrap();
-    let (_, enc) = eu4save::Eu4Extractor::extract_save(BufReader::new(melted_file)).unwrap();
-    assert_eq!(enc, eu4save::Encoding::Text)
+
+    let data = std::fs::read(&output_path).unwrap();
+    let file = eu4save::Eu4File::from_slice(&data).unwrap();
+    let _save = file.deserializer().build_save(&eu4save::EnvTokens).unwrap();
+    assert_eq!(file.encoding(), eu4save::Encoding::Text)
 }
 
 #[test]
@@ -82,9 +84,9 @@ fn test_eu4_melt_stdin_to_stdout() {
         .assert();
 
     let out = assert.get_output();
-    let stdout = &out.stdout;
-    let (_, enc) = eu4save::Eu4Extractor::extract_save(Cursor::new(stdout)).unwrap();
-    assert_eq!(enc, eu4save::Encoding::Text)
+    let file = eu4save::Eu4File::from_slice(&out.stdout).unwrap();
+    let _save = file.deserializer().build_save(&eu4save::EnvTokens).unwrap();
+    assert_eq!(file.encoding(), eu4save::Encoding::Text)
 }
 
 #[test]
@@ -99,9 +101,9 @@ fn test_eu4_melt_retain() {
         .assert();
 
     let out = assert.get_output();
-    let stdout = &out.stdout;
-    let (_, enc) = eu4save::Eu4Extractor::extract_save(Cursor::new(stdout)).unwrap();
-    assert_eq!(enc, eu4save::Encoding::Text)
+    let file = eu4save::Eu4File::from_slice(&out.stdout).unwrap();
+    let _save = file.deserializer().build_save(&eu4save::EnvTokens).unwrap();
+    assert_eq!(file.encoding(), eu4save::Encoding::Text)
 }
 
 #[test]

@@ -165,12 +165,13 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "ck3save"
-version = "0.2.15"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "876d28a590465b08847c2007d0afa18b93c7f26b5483181d005335cce3ead770"
+checksum = "16b8b999528aaf81297579f1db5408eedae49093a4245a0ebc1280330aaba77d"
 dependencies = [
  "jomini",
  "serde",
+ "thiserror",
  "zip",
 ]
 
@@ -249,13 +250,14 @@ checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
 name = "eu4save"
-version = "0.6.2"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f053e270bd3f24fd522b8fa50e2d03f844b7a89d70375369eeb10a1616951b3"
+checksum = "7323a92fc732b50519e5716ccadc6e47184077bbb1cc45d031f003b04f87526b"
 dependencies = [
  "jomini",
  "once_cell",
  "serde",
+ "thiserror",
  "zip",
 ]
 
@@ -352,12 +354,13 @@ dependencies = [
 
 [[package]]
 name = "hoi4save"
-version = "0.1.9"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e10d9c1ab668268de1d55b4da34c797497fe05cbb775e014af6dca8ed4fcfa1f"
+checksum = "658800f6d14559e351bfab92d771dbdd76d130de894abaa1ab5382749c106095"
 dependencies = [
  "jomini",
  "serde",
+ "thiserror",
 ]
 
 [[package]]
@@ -384,12 +387,13 @@ dependencies = [
 
 [[package]]
 name = "imperator-save"
-version = "0.2.10"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e72d7e5db338f2f94624af8240976d2e3e4df14081ade844505c0e84771497db"
+checksum = "f236de7547700f567cd2c18c2508d2acfc68f4745a94832782489d24697f21aa"
 dependencies = [
  "jomini",
  "serde",
+ "thiserror",
  "zip",
 ]
 
@@ -419,12 +423,13 @@ checksum = "112c678d4050afce233f4f2852bb2eb519230b3cf12f33585275537d7e41578d"
 
 [[package]]
 name = "jomini"
-version = "0.18.1"
+version = "0.19.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5d6dba1f33081d1ed79d8cf45872ab0619a2729d9fe54f69fd672928ca957e1"
+checksum = "abcf56da419099ea8558927a5db96655db1d725d24517473367d4f03c877d9bf"
 dependencies = [
  "jomini_derive",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
