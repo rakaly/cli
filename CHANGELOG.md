@@ -1,3 +1,9 @@
+## v0.4.0 - 2022-07-03
+
+- Add initial support for the `json` subcommand, which will convert game and
+save files (including binary ones) into JSON output on stdout. CLI arguments are
+subject to change.
+
 ## v0.3.19 - 2022-06-01
 
 - Support CK3 1.6 saves
