@@ -16,6 +16,7 @@ struct RakalyCommand {
 enum GameCommand {
     Melt(crate::melt::MeltCommand),
     Upload(crate::upload::UploadCommand),
+    Json(crate::json::JsonCommand),
 }
 
 pub fn run() -> anyhow::Result<i32> {
@@ -27,6 +28,7 @@ pub fn run() -> anyhow::Result<i32> {
         match cmd {
             GameCommand::Melt(melt) => melt.exec(),
             GameCommand::Upload(upload) => upload.exec(),
+            GameCommand::Json(json) => json.exec(),
         }
     } else {
         println!("execute --help to see available options");

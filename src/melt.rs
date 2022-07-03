@@ -186,7 +186,11 @@ impl MeltCommand {
             })?;
         }
 
-        let status = if out.unknown_tokens().is_empty() { 0 } else { 1 };
+        let status = if out.unknown_tokens().is_empty() {
+            0
+        } else {
+            1
+        };
         for token in out.unknown_tokens() {
             let _ = writeln!(std::io::stderr(), "{:04x}", token);
         }

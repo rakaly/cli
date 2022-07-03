@@ -52,6 +52,34 @@ The melter knows how to melt a given file based on its file extension. In the ev
 rakaly melt --format eu4 --to-stdout gamestate
 ```
 
+### Conversion to JSON
+
+The `json` subcommand will convert game and save files (including binary ones) into JSON output on stdout.
+
+```bash
+rakaly json aq.eu4
+```
+
+The output can be pretty printed:
+
+```bash
+rakaly json --pretty aq.eu4
+```
+
+By default, duplicate keys are preserved in the JSON, but this can be configured:
+
+```bash
+rakaly json --duplicate-keys preserve  aq.eu4
+rakaly json --duplicate-keys group aq.eu4
+rakaly json --duplicate-keys key-value-pairs aq.eu4
+```
+
+When converting game files, pass the character encoding so that non-ascii characters are represented correctly:
+
+```bash
+rakaly json --format windows-1252 achievements.txt
+```
+
 ### Uploading Save Files
 
 One can upload EU4 saves to Rakaly with:

@@ -1,5 +1,6 @@
 mod cli;
 mod config;
+mod json;
 mod log;
 mod melt;
 mod upload;
