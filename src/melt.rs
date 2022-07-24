@@ -116,7 +116,7 @@ impl MeltCommand {
                     .melter()
                     .on_failed_resolve(resolve)
                     .verbatim(self.retain)
-                    .melt(&eu4save::EnvTokens)?;
+                    .melt(&ck3save::EnvTokens)?;
                 Ok(MeltedDocument::Ck3(out))
             }),
             Some(x) if x == "rome" => self.melt_game(|d| {
@@ -129,7 +129,7 @@ impl MeltCommand {
                     .melter()
                     .on_failed_resolve(resolve)
                     .verbatim(self.retain)
-                    .melt(&eu4save::EnvTokens)?;
+                    .melt(&imperator_save::EnvTokens)?;
                 Ok(MeltedDocument::Imperator(out))
             }),
             Some(x) if x == "hoi4" => self.melt_game(|d| {
@@ -141,7 +141,7 @@ impl MeltCommand {
                     .melter()
                     .on_failed_resolve(resolve)
                     .verbatim(self.retain)
-                    .melt(&eu4save::EnvTokens)?;
+                    .melt(&hoi4save::EnvTokens)?;
                 Ok(MeltedDocument::Hoi4(out))
             }),
             _ => Err(anyhow!(
