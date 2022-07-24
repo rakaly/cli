@@ -1,3 +1,7 @@
+## v0.4.1 - 2022-07-24
+
+- Fix incorrect binary tokens for HOI4, Imperator, and CK3.
+
 ## v0.4.0 - 2022-07-03
 
 - Add initial support for the `json` subcommand, which will convert game and
