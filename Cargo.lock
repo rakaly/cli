@@ -165,9 +165,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "ck3save"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4dcf44189d538a58f843f33bdd247f9134ac2cb9c5098c525ac1956c44c3f61"
+checksum = "55eeea633b7dcb133d42585e3538f18f421cb273b819b5e4828a203165f74939"
 dependencies = [
  "jomini",
  "libdeflater",
@@ -251,9 +251,9 @@ checksum = "90e5c1c8368803113bf0c9584fc495a58b86dc8a29edbf8fe877d21d9507e797"
 
 [[package]]
 name = "eu4save"
-version = "0.8.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0ee0b2cb7e08027e010851ed04d649fae2cfa5a2acd633e414ef1ef35e8ec08"
+checksum = "3f42c5e451987c9b328872d889a38ff73cab6a0abe0559e9df896502f50bc712"
 dependencies = [
  "jomini",
  "libdeflater",
@@ -355,9 +355,9 @@ dependencies = [
 
 [[package]]
 name = "hoi4save"
-version = "0.3.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "619f0fd09bd44f534cc03810f5cbd5bd54438a78eddd28d67ac86ad7504a1c4c"
+checksum = "b0c927b1ebe832c56eeb6cde1f37645647416dee3e14070b90c417b8e7297433"
 dependencies = [
  "jomini",
  "serde",
@@ -387,9 +387,9 @@ dependencies = [
 
 [[package]]
 name = "imperator-save"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83e0cf39cd10b8f8c18a2eda8669293d12f11dc3b8b3575641d6fbafb4ceeab3"
+checksum = "048fd88867c07700297acd586f0abcfe190f9efc50c4a0754d505694135e354d"
 dependencies = [
  "jomini",
  "libdeflater",
