@@ -1,3 +1,9 @@
+## v0.4.2 - 2022-09-12
+
+- Update to CK3 1.7 tokens
+- Update to EU4 1.34 tokens
+- Performance improvements when melting zipped saves
+
 ## v0.4.1 - 2022-07-24
 
 - Fix incorrect binary tokens for HOI4, Imperator, and CK3.
