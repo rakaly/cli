@@ -165,9 +165,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "ck3save"
-version = "0.4.1"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "55eeea633b7dcb133d42585e3538f18f421cb273b819b5e4828a203165f74939"
+checksum = "67b739ef5ec5a2e12d4c115346c730e7c1f1bc5ca2f61a038f41e340c1169d07"
 dependencies = [
  "jomini",
  "libdeflater",
