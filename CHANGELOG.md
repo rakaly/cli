@@ -1,3 +1,7 @@
+## v0.4.3 - 2022-09-22
+
+- Fix incorrect CK3 1.7 melted format for floats
+
 ## v0.4.2 - 2022-09-12
 
 - Update to CK3 1.7 tokens
