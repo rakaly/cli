@@ -1,3 +1,7 @@
+## v0.4.4 - 2022-09-29
+
+- Update to HOI4 1.12 tokens
+
 ## v0.4.3 - 2022-09-22
 
 - Fix incorrect CK3 1.7 melted format for floats
