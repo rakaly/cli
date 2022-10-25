@@ -54,6 +54,7 @@ enum MeltedDocument {
     Imperator(imperator_save::MeltedDocument),
     Hoi4(hoi4save::MeltedDocument),
     Ck3(ck3save::MeltedDocument),
+    Vic3(vic3save::MeltedDocument),
 }
 
 impl MeltedDocument {
@@ -63,6 +64,7 @@ impl MeltedDocument {
             MeltedDocument::Imperator(x) => x.data(),
             MeltedDocument::Hoi4(x) => x.data(),
             MeltedDocument::Ck3(x) => x.data(),
+            MeltedDocument::Vic3(x) => x.data(),
         }
     }
 
@@ -72,6 +74,7 @@ impl MeltedDocument {
             MeltedDocument::Imperator(x) => x.unknown_tokens(),
             MeltedDocument::Hoi4(x) => x.unknown_tokens(),
             MeltedDocument::Ck3(x) => x.unknown_tokens(),
+            MeltedDocument::Vic3(x) => x.unknown_tokens(),
         }
     }
 }
@@ -143,6 +146,19 @@ impl MeltCommand {
                     .verbatim(self.retain)
                     .melt(&hoi4save::EnvTokens)?;
                 Ok(MeltedDocument::Hoi4(out))
+            }),
+            Some(x) if x == "v3" => self.melt_game(|d| {
+                let resolve = parse_failed_resolve(self.unknown_key.as_str())?;
+                let file = vic3save::Vic3File::from_slice(d)?;
+                let mut zip_sink = Vec::new();
+                let parsed_file = file.parse(&mut zip_sink)?;
+                let binary = parsed_file.as_binary().context("not vic3 binary")?;
+                let out = binary
+                    .melter()
+                    .on_failed_resolve(resolve)
+                    .verbatim(self.retain)
+                    .melt(&vic3save::EnvTokens)?;
+                Ok(MeltedDocument::Vic3(out))
             }),
             _ => Err(anyhow!(
                 "Unrecognized format: eu4, ck3, hoi4, and rome are supported"

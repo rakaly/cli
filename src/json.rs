@@ -20,6 +20,7 @@ use jomini::{
     json::{DuplicateKeyMode, JsonOptions},
     TextTape,
 };
+use vic3save::{Vic3File, file::{Vic3ParsedFileKind, Vic3Text}};
 use std::path::PathBuf;
 
 /// convert save and game files to json
@@ -170,6 +171,31 @@ impl JsonCommand {
                             .melt(&hoi4save::EnvTokens)?;
                         Hoi4Text::from_slice(melted.data())
                             .context("unable to parse melted hoi4 output")?
+                            .reader()
+                            .json()
+                            .with_options(options)
+                            .to_writer(std::io::stdout())
+                    }
+                }
+            }
+            Some(x) if x == "v3" => {
+                let file = Vic3File::from_slice(&data)?;
+                let mut zip_sink = Vec::new();
+                let parsed_file = file.parse(&mut zip_sink)?;
+                match parsed_file.kind() {
+                    Vic3ParsedFileKind::Text(text) => text
+                        .reader()
+                        .json()
+                        .with_options(options)
+                        .to_writer(std::io::stdout()),
+                    Vic3ParsedFileKind::Binary(binary) => {
+                        let melted = binary
+                            .melter()
+                            .verbatim(verbatim)
+                            .on_failed_resolve(strategy)
+                            .melt(&vic3save::EnvTokens)?;
+                        Vic3Text::from_slice(melted.data())
+                            .context("unable to parse melted vic3 output")?
                             .reader()
                             .json()
                             .with_options(options)

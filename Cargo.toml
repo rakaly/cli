@@ -11,6 +11,7 @@ eu4save = { version = "0.8", default-features = false, features = ["libdeflate"]
 imperator-save = { version = "0.4", default-features = false, features = ["libdeflate"] }
 ck3save = { version = "0.4", default-features = false, features = ["libdeflate"] }
 hoi4save = "0.3"
+vic3save = { git = "https://github.com/pdx-tools/pdx-tools"  }
 argh = "0.1"
 memmap = "0.7"
 anyhow = "1"

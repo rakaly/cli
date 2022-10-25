@@ -297,7 +297,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f82b0f4c27ad9f8bfd1f3208d882da2b09c301bc1c828fd3a00d0216d2fbbff6"
 dependencies = [
  "crc32fast",
- "miniz_oxide",
+ "miniz_oxide 0.5.4",
 ]
 
 [[package]]
@@ -502,6 +502,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "miniz_oxide"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b275950c28b37e794e8c55d88aeb5e139d0ce23fdbbeda68f8d7174abdf9e8fa"
+dependencies = [
+ "adler",
+]
+
+[[package]]
 name = "native-tls"
 version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -660,6 +669,7 @@ dependencies = [
  "serde",
  "tar",
  "toml",
+ "vic3save",
  "zip",
 ]
 
@@ -891,6 +901,18 @@ name = "vcpkg"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
+
+[[package]]
+name = "vic3save"
+version = "0.1.0"
+source = "git+https://github.com/pdx-tools/pdx-tools#1478837795f01a3f823700143a39ba606d0058ce"
+dependencies = [
+ "jomini",
+ "miniz_oxide 0.6.2",
+ "serde",
+ "thiserror",
+ "zip",
+]
 
 [[package]]
 name = "wait-timeout"
