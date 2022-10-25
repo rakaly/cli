@@ -32,7 +32,7 @@ jobs:
     - uses: actions/checkout@v3
       with:
         path: assets/tokens/
-        repository: rakaly/tokens
+        repository: pdx-tools/tokens
 
     - uses: actions/checkout@v2
     - name: Cache saves
