@@ -31,18 +31,18 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Cache saves
-      uses: actions/cache@v2
-      with:
-        path: assets/saves
-        key: assets/saves
-
     - uses: actions/checkout@v3
       name: Clone tokens
       with:
         path: assets/
         repository: pdx-tools/tokens
         token: ${{secrets.GH_PAT}}
+        
+    - name: Cache saves
+      uses: actions/cache@v2
+      with:
+        path: assets/saves
+        key: assets/saves
 
     - name: Set cross environment variables
       if: matrix.build != 'macos' && matrix.build != 'win-msvc'
