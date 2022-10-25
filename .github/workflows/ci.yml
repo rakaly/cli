@@ -33,6 +33,7 @@ jobs:
       with:
         path: assets/tokens/
         repository: pdx-tools/tokens
+        token: ${{secrets.GH_PAT}}
 
     - uses: actions/checkout@v2
     - name: Cache saves
