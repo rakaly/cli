@@ -29,18 +29,18 @@ jobs:
           os: windows-latest
           target: x86_64-pc-windows-msvc
     steps:
-    - uses: actions/checkout@v3
-      with:
-        path: assets/tokens/
-        repository: pdx-tools/tokens
-        token: ${{secrets.GH_PAT}}
-
     - uses: actions/checkout@v2
     - name: Cache saves
       uses: actions/cache@v2
       with:
         path: assets/saves
         key: assets/saves
+
+    - uses: actions/checkout@v3
+      with:
+        path: assets/tokens/
+        repository: pdx-tools/tokens
+        token: ${{secrets.GH_PAT}}
 
     - name: Set cross environment variables
       if: matrix.build != 'macos' && matrix.build != 'win-msvc'
@@ -49,6 +49,7 @@ jobs:
         echo "CK3_IRONMAN_TOKENS=/project/assets/tokens/ck3.txt" >> $GITHUB_ENV
         echo "IMPERATOR_TOKENS=/project/assets/tokens/imperator.txt" >> $GITHUB_ENV
         echo "HOI4_IRONMAN_TOKENS=/project/assets/tokens/hoi4.txt" >> $GITHUB_ENV
+        echo "VIC3_IRONMAN_TOKENS=/project/assets/tokens/vic3.txt" >> $GITHUB_ENV
 
     - name: Set cargo environment variables
       if: matrix.build == 'macos' || matrix.build == 'win-msvc'
