@@ -30,7 +30,7 @@ jobs:
           target: x86_64-pc-windows-msvc
     steps:
     - uses: actions/checkout@v2
-      -
+      
     - name: Cache saves
       uses: actions/cache@v2
       with:
