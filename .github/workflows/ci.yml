@@ -30,7 +30,7 @@ jobs:
           target: x86_64-pc-windows-msvc
     steps:
     - uses: actions/checkout@v2
-      
+
     - name: Cache saves
       uses: actions/cache@v2
       with:
@@ -77,6 +77,7 @@ jobs:
         echo "CK3_IRONMAN_TOKENS=${{ env.CK3_IRONMAN_TOKENS }}"
         echo "IMPERATOR_TOKENS=${{ env.IMPERATOR_TOKENS }}"
         echo "HOI4_IRONMAN_TOKENS=${{ env.HOI4_IRONMAN_TOKENS }}"
+        echo "VIC3_IRONMAN_TOKENS=${{ env.VIC3_IRONMAN_TOKENS }}"
     - name: Build
       run: ${{ env.CARGO }} build --verbose --target "${{ matrix.target }}"
     - name: Test
