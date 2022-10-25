@@ -29,17 +29,18 @@ jobs:
           os: windows-latest
           target: x86_64-pc-windows-msvc
     steps:
+    - uses: actions/checkout@v3
+      with:
+        path: /project/assets/tokens/
+        repository: rakaly/tokens
+
     - uses: actions/checkout@v2
     - name: Cache saves
       uses: actions/cache@v2
       with:
         path: assets/saves
         key: assets/saves
-    - name: Decrypt tokens
-      run: ./assets/ci/decrypt_secret.sh
-      shell: bash
-      env:
-        TOKEN_PASSPHRASE: ${{ secrets.TOKEN_PASSPHRASE }}
+
     - name: Set cross environment variables
       if: matrix.build != 'macos' && matrix.build != 'win-msvc'
       run: |
@@ -47,6 +48,7 @@ jobs:
         echo "CK3_IRONMAN_TOKENS=/project/assets/tokens/ck3.txt" >> $GITHUB_ENV
         echo "IMPERATOR_TOKENS=/project/assets/tokens/imperator.txt" >> $GITHUB_ENV
         echo "HOI4_IRONMAN_TOKENS=/project/assets/tokens/hoi4.txt" >> $GITHUB_ENV
+
     - name: Set cargo environment variables
       if: matrix.build == 'macos' || matrix.build == 'win-msvc'
       shell: bash
@@ -57,6 +59,7 @@ jobs:
         echo "HOI4_IRONMAN_TOKENS=$current_dir/assets/tokens/hoi4.txt" >> $GITHUB_ENV
       env:
         current_dir: ${{ github.workspace }}
+
     - name: Install Cross
       if: matrix.build != 'macos' && matrix.build != 'win-msvc'
       run: |
