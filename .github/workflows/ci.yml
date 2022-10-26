@@ -71,7 +71,7 @@ jobs:
         cargo install --version 0.2.1 cross
         echo "CARGO=cross" >> $GITHUB_ENV
     - name: Check work
-      run:
+      run: |
         echo "CARGO=${{ env.CARGO }}"
         echo "EU4_IRONMAN_TOKENS=${{ env.EU4_IRONMAN_TOKENS }}"
         echo "CK3_IRONMAN_TOKENS=${{ env.CK3_IRONMAN_TOKENS }}"
