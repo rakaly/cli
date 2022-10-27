@@ -29,7 +29,7 @@ jobs:
           os: windows-latest
           target: x86_64-pc-windows-msvc
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - uses: actions/checkout@v3
       name: Clone tokens
@@ -39,7 +39,7 @@ jobs:
         token: ${{secrets.GH_PAT}}
         
     - name: Cache saves
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: assets/saves
         key: assets/saves
@@ -103,7 +103,7 @@ jobs:
           cp "target/${{ matrix.target }}/release/rakaly" "$STAGING/"
         fi
         echo "ASSET=$STAGING" >> $GITHUB_ENV
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         path: ${{ env.ASSET }}
         name: ${{ env.ASSET }}
@@ -113,8 +113,8 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/download-artifact@v2
+    - uses: actions/checkout@v3
+    - uses: actions/download-artifact@v3
       with:
         path: artifacts-temp
     - name: Flatten artifacts
@@ -131,7 +131,7 @@ jobs:
         ls -lR ../artifacts
     - name: Create Release
       if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-      uses: actions/github-script@v2
+      uses: actions/github-script@v6
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
