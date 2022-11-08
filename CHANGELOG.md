@@ -1,3 +1,7 @@
+## v0.4.5 - 2022-11-07
+
+- Add Vic3 support
+
 ## v0.4.4 - 2022-09-29
 
 - Update to HOI4 1.12 tokens
