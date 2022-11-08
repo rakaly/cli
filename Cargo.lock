@@ -418,9 +418,9 @@ checksum = "4217ad341ebadf8d8e724e264f13e593e0648f5b3e94b3896a5df283be015ecc"
 
 [[package]]
 name = "jomini"
-version = "0.20.0"
+version = "0.20.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62c072d9234b3deb0f732326e636672aa93f28ca7650dcff271b27fe775efaf1"
+checksum = "2e86d4b770f0ef605045a909617ffa9808e8e9ffa9a2d5457cc6d4df8c59b0d2"
 dependencies = [
  "jomini_derive",
  "serde",
@@ -905,9 +905,10 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 [[package]]
 name = "vic3save"
 version = "0.1.0"
-source = "git+https://github.com/pdx-tools/pdx-tools#1478837795f01a3f823700143a39ba606d0058ce"
+source = "git+https://github.com/pdx-tools/pdx-tools#dd633aa090318704359fb5e6ea5a9b41986c0ab1"
 dependencies = [
  "jomini",
+ "libdeflater",
  "miniz_oxide 0.6.2",
  "serde",
  "thiserror",
