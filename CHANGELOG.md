@@ -1,3 +1,9 @@
+## v0.4.6 - 2022-11-23
+
+- Fix vic3 dates in melted output
+   - Properly detect `1.1.1` as a date when encoded as 43808760
+   - Encode `real_date` as a known date as it falls outside the heuristic range
+
 ## v0.4.5 - 2022-11-07
 
 - Add Vic3 support
