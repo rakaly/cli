@@ -1,3 +1,7 @@
+## v0.4.7 - 2022-12-05
+
+- Update to Vic3 1.1 tokens
+
 ## v0.4.6 - 2022-11-23
 
 - Fix vic3 dates in melted output
