@@ -1,3 +1,7 @@
+## v0.4.8 - 2022-12-17
+
+- Update to Ck3 1.8 tokens
+
 ## v0.4.7 - 2022-12-05
 
 - Update to Vic3 1.1 tokens
