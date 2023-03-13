@@ -20,8 +20,11 @@ use jomini::{
     json::{DuplicateKeyMode, JsonOptions},
     TextTape,
 };
-use vic3save::{Vic3File, file::{Vic3ParsedFileKind, Vic3Text}};
 use std::path::PathBuf;
+use vic3save::{
+    file::{Vic3ParsedFileKind, Vic3Text},
+    Vic3File,
+};
 
 /// convert save and game files to json
 #[derive(FromArgs, PartialEq, Debug)]
