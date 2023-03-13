@@ -1,3 +1,9 @@
+## v0.4.9 - 2023-03-13
+
+- Update to HOI4 1.12.11 tokens
+- Update to Vic3 1.2 tokens
+- Improve HOI4 melting accuracy
+
 ## v0.4.8 - 2022-12-17
 
 - Update to Ck3 1.8 tokens
