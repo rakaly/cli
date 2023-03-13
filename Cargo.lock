@@ -167,7 +167,7 @@ version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed638d0b322079ee169d0c4d20db68d2a2f1137fb8755884749d97c335f66951"
 dependencies = [
- "jomini",
+ "jomini 0.20.2",
  "libdeflater",
  "serde",
  "thiserror",
@@ -252,7 +252,7 @@ version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9efe8a2f7c342e13c074326cdad64b67892fbcbc21e2fac34802ff94a43db09a"
 dependencies = [
- "jomini",
+ "jomini 0.20.2",
  "libdeflater",
  "once_cell",
  "serde",
@@ -349,11 +349,11 @@ checksum = "2540771e65fc8cb83cd6e8a237f70c319bd5c29f78ed1084ba5d50eeac86f7f9"
 
 [[package]]
 name = "hoi4save"
-version = "0.3.2"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "110351713431df4d395c31e1633aefbec285e51b867a554299c00875ea5eda58"
+checksum = "b20c06ba3890b130aa69b0ab716b1747da2064c46542a4facbd45ce6a8a79ddc"
 dependencies = [
- "jomini",
+ "jomini 0.21.1",
  "serde",
  "thiserror",
 ]
@@ -385,7 +385,7 @@ version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5616e7a6f4ae6cdb77f5c5389b8d5d27b6330b36687ed76c98bf2e6a8f4c92b0"
 dependencies = [
- "jomini",
+ "jomini 0.20.2",
  "libdeflater",
  "serde",
  "thiserror",
@@ -421,6 +421,17 @@ name = "jomini"
 version = "0.20.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2e86d4b770f0ef605045a909617ffa9808e8e9ffa9a2d5457cc6d4df8c59b0d2"
+dependencies = [
+ "jomini_derive",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "jomini"
+version = "0.21.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea37a19bcb64b13d602bacfb408324015b9edaadae3e449fda35ec7d8b54e9bc"
 dependencies = [
  "jomini_derive",
  "serde",
@@ -662,7 +673,7 @@ dependencies = [
  "fern",
  "hoi4save",
  "imperator-save",
- "jomini",
+ "jomini 0.21.1",
  "log",
  "memmap",
  "native-tls",
@@ -905,9 +916,9 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 [[package]]
 name = "vic3save"
 version = "0.1.0"
-source = "git+https://github.com/pdx-tools/pdx-tools#0f88bbc90475099d30ce787a2503bf7711081db4"
+source = "git+https://github.com/pdx-tools/pdx-tools#572a126e2f408b7018c31ab3425bb50cb0292c4e"
 dependencies = [
- "jomini",
+ "jomini 0.21.1",
  "libdeflater",
  "miniz_oxide 0.6.2",
  "serde",

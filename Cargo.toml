@@ -6,7 +6,7 @@ edition = "2018"
 publish = false
 
 [dependencies]
-jomini = "0.20"
+jomini = "0.21"
 eu4save = { version = "0.8", default-features = false, features = ["libdeflate"] }
 imperator-save = { version = "0.4", default-features = false, features = ["libdeflate"] }
 ck3save = { version = "0.4", default-features = false, features = ["libdeflate"] }
