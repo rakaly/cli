@@ -1,3 +1,7 @@
+## v0.4.10 - 2023-04-18
+
+- Update to support EU4 1.35 tokens
+
 ## v0.4.9 - 2023-03-13
 
 - Update to HOI4 1.12.11 tokens
