@@ -172,7 +172,7 @@ impl MeltCommand {
     {
         let out = if let Some(path) = self.file.as_deref() {
             let in_file =
-                File::open(&path).with_context(|| format!("Failed to open: {}", path.display()))?;
+                File::open(path).with_context(|| format!("Failed to open: {}", path.display()))?;
             let mmap = unsafe { MmapOptions::new().map(&in_file)? };
             f(&mmap[..])?
         } else {

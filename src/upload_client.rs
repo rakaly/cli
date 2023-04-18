@@ -31,7 +31,7 @@ pub struct UploadClient<'a> {
 impl<'a> UploadClient<'a> {
     fn format_basic_auth(&self) -> String {
         let auth = format!("{}:{}", self.user, self.api_key);
-        format!("Basic {}", base64::encode(&auth))
+        format!("Basic {}", base64::encode(auth))
     }
 
     fn save_url(&self) -> String {
