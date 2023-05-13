@@ -1,3 +1,8 @@
+## v0.4.11 - 2023-05-12
+
+- Update to support EU4 1.35.3 tokens
+- Update to support CK3 1.9 tokens
+
 ## v0.4.10 - 2023-04-18
 
 - Update to support EU4 1.35 tokens
