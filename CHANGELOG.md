@@ -1,3 +1,7 @@
+## v0.4.12 - 2023-05-14
+
+- Update hoi4 melter to exclude ironman key from output
+
 ## v0.4.11 - 2023-05-12
 
 - Update to support EU4 1.35.3 tokens
