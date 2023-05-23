@@ -1,3 +1,7 @@
+## v0.4.13 - 2023-05-23
+
+- Update vic3 tokens to 1.3
+
 ## v0.4.12 - 2023-05-14
 
 - Update hoi4 melter to exclude ironman key from output
