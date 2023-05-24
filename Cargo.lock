@@ -1010,7 +1010,7 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 [[package]]
 name = "vic3save"
 version = "0.1.0"
-source = "git+https://github.com/pdx-tools/pdx-tools#4841806778e5e53262ff42043a3dc63a073db3c4"
+source = "git+https://github.com/pdx-tools/pdx-tools#856355d0ed87f5718d9b16ced05496386c278be0"
 dependencies = [
  "jomini",
  "libdeflater",
