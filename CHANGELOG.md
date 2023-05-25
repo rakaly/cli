@@ -1,3 +1,7 @@
+## v0.4.14 - 2023-05-25
+
+- Improved accuracy of vic3 melted numbers
+
 ## v0.4.13 - 2023-05-23
 
 - Update vic3 tokens to 1.3
