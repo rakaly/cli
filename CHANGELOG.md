@@ -1,3 +1,7 @@
+## v0.4.15 - 2023-05-26
+
+- Improve vic3 melt accuracy for pop_statistsics
+
 ## v0.4.14 - 2023-05-25
 
 - Improved accuracy of vic3 melted numbers
