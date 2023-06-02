@@ -1,12 +1,13 @@
 use anyhow::{anyhow, bail, Context};
-use attohttpc::header::{AUTHORIZATION, CONTENT_ENCODING, CONTENT_TYPE};
+use attohttpc::header::{AUTHORIZATION, CONTENT_TYPE};
 use serde::Deserialize;
 use std::{
     fs::File,
-    io::{BufReader, Cursor, Read, Seek, Write},
+    io::{BufReader, Cursor, Read, Seek},
     path::Path,
     time::Instant,
 };
+use zip_next as zip;
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub struct NewSave {
@@ -66,8 +67,7 @@ impl<'a> UploadClient<'a> {
         let now = Instant::now();
         let resp = attohttpc::post(self.save_url())
             .header(AUTHORIZATION, self.format_basic_auth())
-            .header(CONTENT_ENCODING, "br")
-            .header(CONTENT_TYPE, "application/x-tar")
+            .header(CONTENT_TYPE, "application/zip")
             .header("rakaly-filename", self.upload_file_name(path)?)
             .bytes(buffer)
             .send()?;
@@ -86,13 +86,10 @@ impl<'a> UploadClient<'a> {
         let file = File::open(path).context("unable to open")?;
         let meta = file.metadata().context("unable to get metadata")?;
 
-        let mut reader = BufReader::new(file);
-        let buffer = Vec::with_capacity(meta.len() as usize / 10);
-        let mut compressor = new_brotli(Cursor::new(buffer));
-
+        let reader = BufReader::new(file);
+        let mut buffer = Vec::with_capacity(meta.len() as usize / 10);
         let now = Instant::now();
-        std::io::copy(&mut reader, &mut compressor).context("unable to compress")?;
-        let buffer = compressor.into_inner().into_inner();
+        zstd::stream::copy_encode(reader, &mut buffer, 7)?;
         log::info!(
             "compressed {} bytes to {} in {}ms",
             meta.len(),
@@ -103,8 +100,7 @@ impl<'a> UploadClient<'a> {
         let now = Instant::now();
         let resp = attohttpc::post(self.save_url())
             .header(AUTHORIZATION, self.format_basic_auth())
-            .header(CONTENT_ENCODING, "br")
-            .header(CONTENT_TYPE, "text/plain")
+            .header(CONTENT_TYPE, "application/zstd")
             .header("rakaly-filename", self.upload_file_name(path)?)
             .bytes(buffer.as_slice())
             .send()?;
@@ -146,31 +142,25 @@ impl<'a> UploadClient<'a> {
     }
 }
 
-fn new_brotli<W: Write>(writer: W) -> brotli::CompressorWriter<W> {
-    brotli::CompressorWriter::new(writer, 4096, 9, 22)
-}
-
 pub fn recompress<R>(reader: R, size: usize) -> anyhow::Result<Vec<u8>>
 where
     R: Read + Seek,
 {
     let mut zip = zip::ZipArchive::new(reader).unwrap();
     let out = Vec::with_capacity(size / 2);
+    let writer = Cursor::new(out);
+    let mut out_zip = zip::ZipWriter::new(writer);
 
-    let compressor = new_brotli(out);
-    let mut archive = tar::Builder::new(compressor);
+    for i in 0..zip.len() {
+        let mut file = zip.by_index(i)?;
+        let options = zip::write::FileOptions::default()
+            .compression_level(Some(7))
+            .compression_method(zip::CompressionMethod::Zstd);
 
-    for index in 0..zip.len() {
-        let file = zip.by_index(index)?;
-        let mut header = tar::Header::new_gnu();
-        header.set_path(file.name())?;
-        header.set_size(file.size());
-        header.set_mtime(0);
-        header.set_cksum();
-        archive.append(&header, file)?;
+        out_zip.start_file(String::from(file.name()), options)?;
+        std::io::copy(&mut file, &mut out_zip)?;
     }
 
-    archive.finish()?;
-    let data = archive.into_inner()?.into_inner();
+    let data = out_zip.finish()?.into_inner();
     Ok(data)
 }
