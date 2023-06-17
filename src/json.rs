@@ -99,6 +99,7 @@ impl JsonCommand {
                             .on_failed_resolve(strategy)
                             .melt(&eu4save::EnvTokens)?;
                         Eu4Text::from_slice(melted.data())
+                            .and_then(|x| x.parse())
                             .context("unable to parse melted eu4 output")?
                             .reader()
                             .json()
