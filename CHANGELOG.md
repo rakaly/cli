@@ -1,3 +1,8 @@
+## v0.4.16 - 2023-07-10
+
+- Additional accuracy for melted vic3 output
+- Update to latest upload API 
+
 ## v0.4.15 - 2023-05-26
 
 - Improve vic3 melt accuracy for pop_statistsics
