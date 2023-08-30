@@ -1,3 +1,8 @@
+## v0.4.17 - 2023-08-29
+
+- Update to support VIC3 1.4 tokens
+- Update to support CK3 1.10 tokens
+
 ## v0.4.16 - 2023-07-10
 
 - Additional accuracy for melted vic3 output
