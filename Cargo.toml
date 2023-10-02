@@ -18,7 +18,7 @@ anyhow = "1"
 attohttpc = { version = "0.26", features = ["json"] }
 native-tls = { version = "0.2", features = ["vendored"] }
 serde = { version = "1",   features = ["derive"] }
-toml = "0.7"
+toml = "0.8"
 directories = "5"
 base64 = "0.13"
 fern = "0.6"
