@@ -1,3 +1,7 @@
+## v0.4.18 - 2023-10-09
+
+- Update to support VIC3 1.4.2 tokens
+
 ## v0.4.17 - 2023-08-29
 
 - Update to support VIC3 1.4 tokens
