@@ -150,7 +150,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "ck3save"
 version = "0.4.3"
-source = "git+https://github.com/rakaly/ck3save.git#1e5f21a9ee04e7aa6fc5b965d1905139cc7e1e00"
+source = "git+https://github.com/rakaly/ck3save.git#817783ea1af84a2d0e08be7df245d44466e3e62e"
 dependencies = [
  "jomini",
  "libdeflater",
@@ -262,7 +262,7 @@ dependencies = [
 [[package]]
 name = "eu4save"
 version = "0.8.2"
-source = "git+https://github.com/rakaly/eu4save.git#cc1cc97968fa9441d88e0ffdd9010cecce5d12c2"
+source = "git+https://github.com/rakaly/eu4save.git#224bc2b5234c3ebfa8fd9d52f86ee95efc326344"
 dependencies = [
  "jomini",
  "libdeflater",
@@ -347,7 +347,7 @@ checksum = "7dfda62a12f55daeae5015f81b0baea145391cb4520f86c248fc615d72640d12"
 [[package]]
 name = "hoi4save"
 version = "0.3.4"
-source = "git+https://github.com/rakaly/hoi4save.git#ea671335792244eaa0607379561e650c2b05176e"
+source = "git+https://github.com/rakaly/hoi4save.git#514f19bf51228961223fffdb57e471a54a0b9fee"
 dependencies = [
  "jomini",
  "serde",
@@ -378,7 +378,7 @@ dependencies = [
 [[package]]
 name = "imperator-save"
 version = "0.4.2"
-source = "git+https://github.com/rakaly/imperator-save.git#4e93cde4dda8e5a490a410486f1f8e331868d712"
+source = "git+https://github.com/rakaly/imperator-save.git#fd2912222fbc79549ff5d5bd37d65f084b69f99e"
 dependencies = [
  "jomini",
  "libdeflater",
@@ -423,9 +423,9 @@ dependencies = [
 
 [[package]]
 name = "jomini"
-version = "0.22.2"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "03d1d1523243b398a3e1442c6f145b9510b95797a9ee973de683dcb0fca772af"
+checksum = "530ec944f6d5a983e716f30bc4d0c341ac9cdb3407499e990e76592a38bb0a6c"
 dependencies = [
  "jomini_derive",
  "serde",
@@ -963,7 +963,7 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 [[package]]
 name = "vic3save"
 version = "0.1.0"
-source = "git+https://github.com/pdx-tools/pdx-tools#9b0e5c7dfc8b0278e010f6f87a56d4d6621142b0"
+source = "git+https://github.com/pdx-tools/pdx-tools#8dc15b7ed16586f3fdbe2644e64b7b3af93e3ba1"
 dependencies = [
  "jomini",
  "libdeflater",
