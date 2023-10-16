@@ -1,3 +1,7 @@
+## v0.4.19 - 2023-10-15
+
+- Update to support HOI4 1.13 saves
+
 ## v0.4.18 - 2023-10-09
 
 - Update to support VIC3 1.4.2 tokens
