@@ -1,3 +1,7 @@
+## v0.4.20 - 2023-11-06
+
+- Update to support EU4 1.36 saves
+
 ## v0.4.19 - 2023-10-15
 
 - Update to support HOI4 1.13 saves
