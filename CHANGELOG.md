@@ -1,4 +1,4 @@
-## v0.4.22 - 2023-11-15
+## v0.4.22 - 2023-11-21
 
 - Improved support for VIC3 1.5 saves
 
