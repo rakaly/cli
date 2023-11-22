@@ -1,3 +1,7 @@
+## v0.4.22 - 2023-11-15
+
+- Improved support for VIC3 1.5 saves
+
 ## v0.4.21 - 2023-11-15
 
 - Update to support CK3 1.11 saves

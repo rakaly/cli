@@ -150,7 +150,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "ck3save"
 version = "0.4.3"
-source = "git+https://github.com/rakaly/ck3save.git#817783ea1af84a2d0e08be7df245d44466e3e62e"
+source = "git+https://github.com/rakaly/ck3save.git#d6a35448baaef0e4d0e2876a7dd75cf4be6df4ae"
 dependencies = [
  "jomini",
  "libdeflater",
@@ -262,7 +262,7 @@ dependencies = [
 [[package]]
 name = "eu4save"
 version = "0.8.2"
-source = "git+https://github.com/rakaly/eu4save.git#f8df336d27c4d471a7dce6c5027812a91d54f4f9"
+source = "git+https://github.com/rakaly/eu4save.git#10b9acd27b16b872587674b9996d1c5c256e5d14"
 dependencies = [
  "jomini",
  "libdeflater",
@@ -294,7 +294,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c6c98ee8095e9d1dcbf2fcc6d95acccb90d1c81db1e44725c6a984b1dbdfb010"
 dependencies = [
  "crc32fast",
- "miniz_oxide 0.7.1",
+ "miniz_oxide",
 ]
 
 [[package]]
@@ -347,7 +347,7 @@ checksum = "7dfda62a12f55daeae5015f81b0baea145391cb4520f86c248fc615d72640d12"
 [[package]]
 name = "hoi4save"
 version = "0.3.4"
-source = "git+https://github.com/rakaly/hoi4save.git#514f19bf51228961223fffdb57e471a54a0b9fee"
+source = "git+https://github.com/rakaly/hoi4save.git#5048cdc6289c427c1004835c64df2eb97e5af2b1"
 dependencies = [
  "jomini",
  "serde",
@@ -378,7 +378,7 @@ dependencies = [
 [[package]]
 name = "imperator-save"
 version = "0.4.2"
-source = "git+https://github.com/rakaly/imperator-save.git#fd2912222fbc79549ff5d5bd37d65f084b69f99e"
+source = "git+https://github.com/rakaly/imperator-save.git#057a07cb1d6f812297b74c209bc838381d2bf085"
 dependencies = [
  "jomini",
  "libdeflater",
@@ -423,9 +423,9 @@ dependencies = [
 
 [[package]]
 name = "jomini"
-version = "0.23.0"
+version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "530ec944f6d5a983e716f30bc4d0c341ac9cdb3407499e990e76592a38bb0a6c"
+checksum = "e86b12b9bb9a94d68179ba79dc5c70067556be306636568d52860c7a5ec77e36"
 dependencies = [
  "jomini_derive",
  "serde",
@@ -434,9 +434,9 @@ dependencies = [
 
 [[package]]
 name = "jomini_derive"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "708b3655354ca22e0ba5c70fab085f14b53da09522f68d0ae84ef5e54d432c38"
+checksum = "29d12f3fe59690eba739a86f305cd085efc9e853b10908735f5ee28f0e743aec"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -456,18 +456,18 @@ checksum = "a08173bc88b7955d1b3145aa561539096c421ac8debde8cbc3612ec635fee29b"
 
 [[package]]
 name = "libdeflate-sys"
-version = "0.11.0"
+version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb6784b6b84b67d71b4307963d456a9c7c29f9b47c658f533e598de369e34277"
+checksum = "67921a7f85100c1559efc3d1c7c472091b7da05f304b4bbd5356f075e97f1cc2"
 dependencies = [
  "cc",
 ]
 
 [[package]]
 name = "libdeflater"
-version = "0.11.0"
+version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8e285aa6a046fd338b2592c16bee148b2b00789138ed6b7bb56bb13d585050d"
+checksum = "3a31b22f662350ec294b13859f935aea772ba7b2bc8776269f4a5627308eab7d"
 dependencies = [
  "libdeflate-sys",
 ]
@@ -498,15 +498,6 @@ checksum = "6585fd95e7bb50d6cc31e20d4cf9afb4e2ba16c5846fc76793f11218da9c475b"
 dependencies = [
  "libc",
  "winapi",
-]
-
-[[package]]
-name = "miniz_oxide"
-version = "0.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b275950c28b37e794e8c55d88aeb5e139d0ce23fdbbeda68f8d7174abdf9e8fa"
-dependencies = [
- "adler",
 ]
 
 [[package]]
@@ -963,11 +954,11 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 [[package]]
 name = "vic3save"
 version = "0.1.0"
-source = "git+https://github.com/pdx-tools/pdx-tools#8dc15b7ed16586f3fdbe2644e64b7b3af93e3ba1"
+source = "git+https://github.com/pdx-tools/pdx-tools#778b54132d12daeccf3e0e0c7aa4942ae4e4eefd"
 dependencies = [
  "jomini",
  "libdeflater",
- "miniz_oxide 0.6.2",
+ "miniz_oxide",
  "serde",
  "thiserror",
  "zip",
