@@ -1,5 +1,6 @@
 use anyhow::{anyhow, bail, Context};
 use attohttpc::header::{AUTHORIZATION, CONTENT_TYPE};
+use base64::Engine;
 use serde::Deserialize;
 use std::{
     fs::File,
@@ -32,7 +33,8 @@ pub struct UploadClient<'a> {
 impl<'a> UploadClient<'a> {
     fn format_basic_auth(&self) -> String {
         let auth = format!("{}:{}", self.user, self.api_key);
-        format!("Basic {}", base64::encode(auth))
+        let fmt = base64::engine::general_purpose::STANDARD.encode(auth);
+        format!("Basic {}", fmt)
     }
 
     fn save_url(&self) -> String {
