@@ -4,10 +4,7 @@ use ck3save::{
     file::{Ck3ParsedFileKind, Ck3Text},
     Ck3File,
 };
-use eu4save::{
-    file::{Eu4ParsedFileKind, Eu4Text},
-    Eu4File,
-};
+use eu4save::{file::Eu4ParsedText, Eu4File};
 use hoi4save::{
     file::{Hoi4ParsedFileKind, Hoi4Text},
     Hoi4File,
@@ -20,7 +17,7 @@ use jomini::{
     json::{DuplicateKeyMode, JsonOptions},
     TextTape,
 };
-use std::path::PathBuf;
+use std::{io::Cursor, path::PathBuf};
 use vic3save::{
     file::{Vic3ParsedFileKind, Vic3Text},
     Vic3File,
@@ -84,29 +81,21 @@ impl JsonCommand {
         let _ = match extension {
             Some(x) if x == "eu4" => {
                 let file = Eu4File::from_slice(&data)?;
-                let mut zip_sink = Vec::new();
-                let parsed_file = file.parse(&mut zip_sink)?;
-                match parsed_file.kind() {
-                    Eu4ParsedFileKind::Text(text) => text
-                        .reader()
-                        .json()
-                        .with_options(options)
-                        .to_writer(std::io::stdout()),
-                    Eu4ParsedFileKind::Binary(binary) => {
-                        let melted = binary
-                            .melter()
-                            .verbatim(verbatim)
-                            .on_failed_resolve(strategy)
-                            .melt(&eu4save::EnvTokens)?;
-                        Eu4Text::from_slice(melted.data())
-                            .and_then(|x| x.parse())
-                            .context("unable to parse melted eu4 output")?
-                            .reader()
-                            .json()
-                            .with_options(options)
-                            .to_writer(std::io::stdout())
-                    }
-                }
+                let mut out = Cursor::new(Vec::new());
+                let text = if file.encoding().is_binary() || file.encoding().is_zip() {
+                    file.melter()
+                        .on_failed_resolve(strategy)
+                        .verbatim(verbatim)
+                        .melt(&mut out, &eu4save::EnvTokens)?;
+                    Eu4ParsedText::from_slice(out.get_ref().as_slice())?
+                } else {
+                    Eu4ParsedText::from_slice(&data)?
+                };
+
+                text.reader()
+                    .json()
+                    .with_options(options)
+                    .to_writer(std::io::stdout())
             }
             Some(x) if x == "ck3" => {
                 let file = Ck3File::from_slice(&data)?;
