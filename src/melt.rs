@@ -130,15 +130,11 @@ impl Melter {
             }
             MelterKind::Imperator => {
                 let file = imperator_save::ImperatorFile::from_slice(data)?;
-                let mut zip_sink = Vec::new();
-                let parsed_file = file.parse(&mut zip_sink)?;
-                let binary = parsed_file.as_binary().context("not imperator binary")?;
-                let out = binary
+                let out = file
                     .melter()
                     .on_failed_resolve(self.options.resolve)
                     .verbatim(self.options.retain)
-                    .melt(&imperator_save::EnvTokens)?;
-                writer.write_all(out.data())?;
+                    .melt(writer, &imperator_save::EnvTokens)?;
                 Ok(MeltedDocument::Imperator(out))
             }
             MelterKind::Vic3 => {

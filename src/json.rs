@@ -9,10 +9,7 @@ use hoi4save::{
     file::{Hoi4ParsedFileKind, Hoi4Text},
     Hoi4File,
 };
-use imperator_save::{
-    file::{ImperatorParsedFileKind, ImperatorText},
-    ImperatorFile,
-};
+use imperator_save::{file::ImperatorText, ImperatorFile};
 use jomini::{
     json::{DuplicateKeyMode, JsonOptions},
     TextTape,
@@ -124,28 +121,21 @@ impl JsonCommand {
             }
             Some(x) if x == "rome" => {
                 let file = ImperatorFile::from_slice(&data)?;
-                let mut zip_sink = Vec::new();
-                let parsed_file = file.parse(&mut zip_sink)?;
-                match parsed_file.kind() {
-                    ImperatorParsedFileKind::Text(text) => text
-                        .reader()
-                        .json()
-                        .with_options(options)
-                        .to_writer(std::io::stdout()),
-                    ImperatorParsedFileKind::Binary(binary) => {
-                        let melted = binary
-                            .melter()
-                            .verbatim(verbatim)
-                            .on_failed_resolve(strategy)
-                            .melt(&imperator_save::EnvTokens)?;
-                        ImperatorText::from_slice(melted.data())
-                            .context("unable to parse melted imperator output")?
-                            .reader()
-                            .json()
-                            .with_options(options)
-                            .to_writer(std::io::stdout())
-                    }
-                }
+                let mut out = Cursor::new(Vec::new());
+                let text = if !matches!(file.encoding(), imperator_save::Encoding::Text) {
+                    file.melter()
+                        .on_failed_resolve(strategy)
+                        .verbatim(verbatim)
+                        .melt(&mut out, &imperator_save::EnvTokens)?;
+                    ImperatorText::from_slice(out.get_ref().as_slice())?
+                } else {
+                    ImperatorText::from_slice(&data)?
+                };
+
+                text.reader()
+                    .json()
+                    .with_options(options)
+                    .to_writer(std::io::stdout())
             }
             Some(x) if x == "hoi4" => {
                 let file = Hoi4File::from_slice(&data)?;

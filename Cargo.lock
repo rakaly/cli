@@ -253,7 +253,7 @@ dependencies = [
 [[package]]
 name = "eu4save"
 version = "0.8.2"
-source = "git+https://github.com/rakaly/eu4save.git#480250eedc8351d0c91c8822dd8756f45e6f3143"
+source = "git+https://github.com/rakaly/eu4save.git#d124fa13876777d330fea1a9c5b55a9afcd44c13"
 dependencies = [
  "flate2",
  "jomini",
@@ -370,8 +370,9 @@ dependencies = [
 [[package]]
 name = "imperator-save"
 version = "0.4.2"
-source = "git+https://github.com/rakaly/imperator-save.git#70e66caade56820832e1b27f0d40faaf15926376"
+source = "git+https://github.com/rakaly/imperator-save.git#6b9758be506ecef2e90f40f58a967cc2bd81f6ee"
 dependencies = [
+ "flate2",
  "jomini",
  "libdeflater",
  "serde",
