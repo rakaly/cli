@@ -1,9 +1,6 @@
-use anyhow::{anyhow, Context};
+use anyhow::{anyhow, bail, Context};
 use argh::FromArgs;
-use ck3save::{
-    file::{Ck3ParsedFileKind, Ck3Text},
-    Ck3File,
-};
+use ck3save::{file::Ck3ParsedFileKind, Ck3File};
 use eu4save::{file::Eu4ParsedText, Eu4File};
 use hoi4save::{
     file::{Hoi4ParsedFileKind, Hoi4Text},
@@ -110,9 +107,17 @@ impl JsonCommand {
                             .verbatim(verbatim)
                             .on_failed_resolve(strategy)
                             .melt(&ck3save::EnvTokens)?;
-                        Ck3Text::from_slice(melted.data())
-                            .context("unable to parse melted ck3 output")?
-                            .reader()
+
+                        let melted_file = Ck3File::from_slice(melted.data())
+                            .context("unable to detect melted ck3 output")?;
+                        let mut unused = Vec::new();
+                        let parsed_file = melted_file
+                            .parse(&mut unused)
+                            .context("unable to parse melted ck3 output")?;
+                        let Ck3ParsedFileKind::Text(text) = parsed_file.kind() else {
+                            bail!("melted ck3 output in expected format");
+                        };
+                        text.reader()
                             .json()
                             .with_options(options)
                             .to_writer(std::io::stdout())
