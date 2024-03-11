@@ -1,3 +1,8 @@
+## v0.4.24 - 2024-03-11
+
+- Update to support HOI4 1.14 saves
+- Fix ironman ck3 json generation
+
 ## v0.4.23 - 2024-03-07
 
 - Update to support CK3 1.12 saves
