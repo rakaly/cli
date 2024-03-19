@@ -23,7 +23,7 @@ directories = "5"
 base64 = "0.21"
 fern = "0.6"
 log = "0.4"
-zip_next = { version = "0.10.0", default-features = false, features = ["deflate", "zstd"] }
+zip_next = { version = "0.11.0", default-features = false, features = ["deflate", "zstd"] }
 zstd = { version = "0.13.0", default-features = false }
 
 [dev-dependencies]
