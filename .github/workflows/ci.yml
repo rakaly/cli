@@ -16,15 +16,19 @@ jobs:
       matrix:
         build:
         - linux-musl
-        - macos
+        - macos-x86_64
+        - macos-aarch64
         - win-msvc
         include:
         - build: linux-musl
           os: ubuntu-latest
           target: x86_64-unknown-linux-musl
-        - build: macos
+        - build: macos-x86_64
           os: macos-latest
           target: x86_64-apple-darwin
+        - build: macos-aarch64
+          os: macos-latest
+          target: aarch64-apple-darwin
         - build: win-msvc
           os: windows-latest
           target: x86_64-pc-windows-msvc
@@ -45,7 +49,7 @@ jobs:
         key: assets/saves
 
     - name: Set cross environment variables
-      if: matrix.build != 'macos' && matrix.build != 'win-msvc'
+      if: matrix.build != 'macos-x86_64' && matrix.build != 'macos-aarch64' && matrix.build != 'win-msvc'
       run: |
         echo "EU4_IRONMAN_TOKENS=/project/assets/tokens/eu4.txt" >> $GITHUB_ENV
         echo "CK3_IRONMAN_TOKENS=/project/assets/tokens/ck3.txt" >> $GITHUB_ENV
@@ -54,7 +58,7 @@ jobs:
         echo "VIC3_IRONMAN_TOKENS=/project/assets/tokens/vic3.txt" >> $GITHUB_ENV
 
     - name: Set cargo environment variables
-      if: matrix.build == 'macos' || matrix.build == 'win-msvc'
+      if: matrix.build == 'macos-x86_64' || matrix.build == 'macos-aarch64' || matrix.build == 'win-msvc'
       shell: bash
       run: |
         echo "EU4_IRONMAN_TOKENS=$current_dir/assets/tokens/eu4.txt" >> $GITHUB_ENV
@@ -66,7 +70,7 @@ jobs:
         current_dir: ${{ github.workspace }}
 
     - name: Install Cross
-      if: matrix.build != 'macos' && matrix.build != 'win-msvc'
+      if: matrix.build != 'macos-x86_64' && matrix.build != 'macos-aarch64' && matrix.build != 'win-msvc'
       run: |
         cargo install --version 0.2.1 cross
         echo "CARGO=cross" >> $GITHUB_ENV
