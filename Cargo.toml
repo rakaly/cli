@@ -31,3 +31,4 @@ assert_cmd = "2"
 
 [profile.release]
 lto = "thin"
+strip = true
