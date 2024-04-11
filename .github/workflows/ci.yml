@@ -2,6 +2,8 @@ name: ci
 on:
   pull_request:
   push:
+    branches: ['master']
+    tags: ['v*']
   schedule:
   - cron: '00 01 * * *'
 
@@ -16,19 +18,20 @@ jobs:
       fail-fast: false
       matrix:
         build:
-        - linux-musl
-        - macos
-        - win-msvc
+        - x86_64-unknown-linux-musl
+        - x86_64-apple-darwin
+        - aarch64-apple-darwin
+        - x86_64-pc-windows-msvc
         include:
-        - build: linux-musl
+        - build: x86_64-unknown-linux-musl
           os: ubuntu-latest
-          target: x86_64-unknown-linux-musl
-        - build: macos
+        - build: x86_64-apple-darwin
           os: macos-latest
-          target: x86_64-apple-darwin
-        - build: win-msvc
+        - build: aarch64-apple-darwin
+          os: macos-latest
+          run_test: 'false'
+        - build: x86_64-pc-windows-msvc
           os: windows-latest
-          target: x86_64-pc-windows-msvc
     steps:
     - uses: actions/checkout@v4
 
@@ -45,8 +48,12 @@ jobs:
         path: assets/saves
         key: assets/saves
 
+    - name: Setup cross compilation (non-linux)
+      if: matrix.os != 'ubuntu-latest'
+      run: rustup target add ${{ matrix.build }}
+
     - name: Set cross environment variables
-      if: matrix.build != 'macos' && matrix.build != 'win-msvc'
+      if: matrix.os == 'ubuntu-latest'
       run: |
         echo "EU4_IRONMAN_TOKENS=/project/assets/tokens/eu4.txt" >> $GITHUB_ENV
         echo "CK3_IRONMAN_TOKENS=/project/assets/tokens/ck3.txt" >> $GITHUB_ENV
@@ -55,7 +62,7 @@ jobs:
         echo "VIC3_IRONMAN_TOKENS=/project/assets/tokens/vic3.txt" >> $GITHUB_ENV
 
     - name: Set cargo environment variables
-      if: matrix.build == 'macos' || matrix.build == 'win-msvc'
+      if: matrix.os != 'ubuntu-latest'
       shell: bash
       run: |
         echo "EU4_IRONMAN_TOKENS=$current_dir/assets/tokens/eu4.txt" >> $GITHUB_ENV
@@ -80,11 +87,12 @@ jobs:
         echo "HOI4_IRONMAN_TOKENS=${{ env.HOI4_IRONMAN_TOKENS }}"
         echo "VIC3_IRONMAN_TOKENS=${{ env.VIC3_IRONMAN_TOKENS }}"
     - name: Build
-      run: ${{ env.CARGO }} build --verbose --target "${{ matrix.target }}"
+      run: ${{ env.CARGO }} build --verbose --target "${{ matrix.build }}"
     - name: Test
-      run: ${{ env.CARGO }} test --verbose --target "${{ matrix.target }}"
+      if: matrix.run_test != 'false'
+      run: ${{ env.CARGO }} test --verbose --target "${{ matrix.build }}"
     - name: Build Release Artifact
-      run: ${{ env.CARGO }} build --release --verbose --target "${{ matrix.target }}"
+      run: ${{ env.CARGO }} build --release --verbose --target "${{ matrix.build }}"
     - name: Stage Release
       shell: bash
       run: |
@@ -94,14 +102,13 @@ jobs:
           VERSION="vnightly"
         fi
         echo "version is $VERSION"
-        STAGING="rakaly-${VERSION:1}-${{ matrix.target }}"
+        STAGING="rakaly-${VERSION:1}-${{ matrix.build }}"
         echo "STAGING DIR: $STAGING"
         mkdir $STAGING 
         if [[ "${{ matrix.os }}" = windows* ]]; then
-          cp "target/${{ matrix.target }}/release/rakaly.exe" "$STAGING/"
+          cp "target/${{ matrix.build }}/release/rakaly.exe" "$STAGING/"
         else
-          strip "target/${{ matrix.target }}/release/rakaly"
-          cp "target/${{ matrix.target }}/release/rakaly" "$STAGING/"
+          cp "target/${{ matrix.build }}/release/rakaly" "$STAGING/"
         fi
         echo "ASSET=$STAGING" >> $GITHUB_ENV
     - uses: actions/upload-artifact@v3
