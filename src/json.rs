@@ -13,7 +13,7 @@ use jomini::{
 };
 use std::{io::Cursor, path::PathBuf};
 use vic3save::{
-    file::{Vic3ParsedFileKind, Vic3Text},
+    file::{Vic3ParsedFileKind, Vic3ParsedText},
     Vic3File,
 };
 
@@ -182,7 +182,7 @@ impl JsonCommand {
                             .verbatim(verbatim)
                             .on_failed_resolve(strategy)
                             .melt(&vic3save::EnvTokens)?;
-                        Vic3Text::from_slice(melted.data())
+                        Vic3ParsedText::from_slice(melted.data())
                             .context("unable to parse melted vic3 output")?
                             .reader()
                             .json()

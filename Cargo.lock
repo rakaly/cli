@@ -781,6 +781,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_path_to_error"
+version = "0.1.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af99884400da37c88f5e9146b7f1fd0fbcae8f6eec4e9da38b67d05486f814a6"
+dependencies = [
+ "itoa",
+ "serde",
+]
+
+[[package]]
 name = "serde_spanned"
 version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -939,12 +949,13 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 [[package]]
 name = "vic3save"
 version = "0.1.0"
-source = "git+https://github.com/pdx-tools/pdx-tools#3b01c72bd17c8721b7c7256556d077f19f7b1854"
+source = "git+https://github.com/pdx-tools/pdx-tools#851b412506b19688ffdcb38b3f21d33d2b7231f8"
 dependencies = [
  "jomini",
  "libdeflater",
  "miniz_oxide",
  "serde",
+ "serde_path_to_error",
  "thiserror",
  "zip",
 ]
