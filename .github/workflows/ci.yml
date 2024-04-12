@@ -26,10 +26,9 @@ jobs:
         - build: x86_64-unknown-linux-musl
           os: ubuntu-latest
         - build: x86_64-apple-darwin
-          os: macos-latest
+          os: macos-12
         - build: aarch64-apple-darwin
-          os: macos-latest
-          run_test: 'false'
+          os: macos-14
         - build: x86_64-pc-windows-msvc
           os: windows-latest
     steps:
@@ -47,10 +46,6 @@ jobs:
       with:
         path: assets/saves
         key: assets/saves
-
-    - name: Setup cross compilation (non-linux)
-      if: matrix.os != 'ubuntu-latest'
-      run: rustup target add ${{ matrix.build }}
 
     - name: Set cross environment variables
       if: matrix.os == 'ubuntu-latest'
@@ -74,7 +69,7 @@ jobs:
         current_dir: ${{ github.workspace }}
 
     - name: Install Cross
-      if: matrix.build != 'macos' && matrix.build != 'win-msvc'
+      if: matrix.os == 'ubuntu-latest'
       run: |
         cargo install --version 0.2.1 cross
         echo "CARGO=cross" >> $GITHUB_ENV
@@ -89,7 +84,6 @@ jobs:
     - name: Build
       run: ${{ env.CARGO }} build --verbose --target "${{ matrix.build }}"
     - name: Test
-      if: matrix.run_test != 'false'
       run: ${{ env.CARGO }} test --verbose --target "${{ matrix.build }}"
     - name: Build Release Artifact
       run: ${{ env.CARGO }} build --release --verbose --target "${{ matrix.build }}"
