@@ -1,3 +1,7 @@
+## v0.4.25 - 2024-04-12
+
+- Release native mac m-series binaries
+
 ## v0.4.24 - 2024-03-11
 
 - Update to support HOI4 1.14 saves
