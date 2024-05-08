@@ -16,6 +16,7 @@ The Rakaly CLI provides a convenient way of accessing [Rakaly](https://rakaly.co
  - Download desired build (mac, windows, or linux)
  - Extract
  - (optional): Add to your computers path for easier access
+   - For windows, PATH can be modified through [the GUI](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/) or [the terminal](https://stackoverflow.com/q/9546324/433785)
  - Enjoy
 
 ## Documentation
