@@ -42,7 +42,7 @@ jobs:
         token: ${{secrets.GH_PAT}}
         
     - name: Cache saves
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: assets/saves
         key: assets/saves
@@ -105,7 +105,7 @@ jobs:
           cp "target/${{ matrix.build }}/release/rakaly" "$STAGING/"
         fi
         echo "ASSET=$STAGING" >> $GITHUB_ENV
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         path: ${{ env.ASSET }}
         name: ${{ env.ASSET }}
@@ -116,7 +116,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         path: artifacts-temp
     - name: Flatten artifacts
@@ -133,7 +133,7 @@ jobs:
         ls -lR ../artifacts
     - name: Create Release
       if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
