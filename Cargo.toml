@@ -15,19 +15,11 @@ vic3save = { git = "https://github.com/pdx-tools/pdx-tools", features = ["libdef
 argh = "0.1"
 memmap = "0.7"
 anyhow = "1"
-attohttpc = { version = "0.28", features = ["json"] }
-native-tls = { version = "0.2", features = ["vendored"] }
-serde = { version = "1",   features = ["derive"] }
-toml = "0.8"
-directories = "5"
-base64 = "0.22"
-fern = "0.6"
-log = "0.4"
-zip_next = { version = "1.0", default-features = false, features = ["deflate", "zstd"] }
-zstd = { version = "0.13.0", default-features = false }
 
 [dev-dependencies]
 assert_cmd = "2"
+attohttpc = "0.28"
+native-tls = { version = "0.2", features = ["vendored"] }
 
 [profile.release]
 lto = "thin"
