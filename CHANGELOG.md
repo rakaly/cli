@@ -1,3 +1,8 @@
+## v0.5.0 - 2024-05-08
+
+- Remove underutilized `upload` command to mitigate false positive virus reports
+- Update to support EU4 1.37 saves
+
 ## v0.4.25 - 2024-04-12
 
 - Release native mac m-series binaries
