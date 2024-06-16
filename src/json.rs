@@ -72,7 +72,7 @@ impl JsonCommand {
         let writer = BufWriter::new(stdout.lock());
 
         let _ = match extension {
-            Some(x) if x == "eu4" => {
+            Some("eu4") => {
                 let file = Eu4File::from_slice(&data)?;
                 let mut out = Cursor::new(Vec::new());
                 let text = if file.encoding().is_binary() || file.encoding().is_zip() {
@@ -87,7 +87,7 @@ impl JsonCommand {
 
                 text.reader().json().with_options(options).to_writer(writer)
             }
-            Some(x) if x == "ck3" => {
+            Some("ck3")  => {
                 let file = Ck3File::from_slice(&data)?;
                 let mut out = Cursor::new(Vec::new());
                 let text = if !matches!(file.encoding(), ck3save::Encoding::Text) {
@@ -100,7 +100,7 @@ impl JsonCommand {
                 };
                 text.reader().json().with_options(options).to_writer(writer)
             }
-            Some(x) if x == "rome" => {
+            Some("rome") => {
                 let file = ImperatorFile::from_slice(&data)?;
                 let mut out = Cursor::new(Vec::new());
                 let text = if !matches!(file.encoding(), imperator_save::Encoding::Text) {
@@ -115,7 +115,7 @@ impl JsonCommand {
 
                 text.reader().json().with_options(options).to_writer(writer)
             }
-            Some(x) if x == "hoi4" => {
+            Some("hoi4") => {
                 let file = Hoi4File::from_slice(&data)?;
                 let mut out = Cursor::new(Vec::new());
                 let text = if !matches!(file.encoding(), hoi4save::Encoding::Plaintext) {
@@ -128,7 +128,7 @@ impl JsonCommand {
                 };
                 text.reader().json().with_options(options).to_writer(writer)
             }
-            Some(x) if x == "v3" => {
+            Some("v3") => {
                 let file = Vic3File::from_slice(&data)?;
                 let mut out = Cursor::new(Vec::new());
                 file.melter()
