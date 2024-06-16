@@ -6,7 +6,7 @@ edition = "2018"
 publish = false
 
 [dependencies]
-jomini = "0.25"
+jomini = "0.26"
 eu4save = { git = "https://github.com/rakaly/eu4save.git", default-features = false, features = ["libdeflate"] }
 imperator-save = { git = "https://github.com/rakaly/imperator-save.git", default-features = false, features = ["libdeflate"] }
 ck3save = { git = "https://github.com/rakaly/ck3save.git", default-features = false, features = ["libdeflate"] }

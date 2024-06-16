@@ -104,7 +104,7 @@ impl FromStr for MelterKind {
 }
 
 impl Melter {
-    pub fn melt<W: Write>(&mut self, data: &[u8], mut writer: W) -> anyhow::Result<MeltedDocument> {
+    pub fn melt<W: Write>(&mut self, data: &[u8], writer: W) -> anyhow::Result<MeltedDocument> {
         match self.kind {
             MelterKind::Eu4 => {
                 let file = eu4save::Eu4File::from_slice(data)?;
@@ -116,16 +116,12 @@ impl Melter {
                 Ok(MeltedDocument::Eu4(out))
             }
             MelterKind::Ck3 => {
-                let mut zip_sink = Vec::new();
                 let file = ck3save::Ck3File::from_slice(data)?;
-                let parsed_file = file.parse(&mut zip_sink)?;
-                let binary = parsed_file.as_binary().context("not ck3 binary")?;
-                let out = binary
+                let out = file
                     .melter()
                     .on_failed_resolve(self.options.resolve)
                     .verbatim(self.options.retain)
-                    .melt(&ck3save::EnvTokens)?;
-                writer.write_all(out.data())?;
+                    .melt(writer, &ck3save::EnvTokens)?;
                 Ok(MeltedDocument::Ck3(out))
             }
             MelterKind::Imperator => {
@@ -139,27 +135,20 @@ impl Melter {
             }
             MelterKind::Vic3 => {
                 let file = vic3save::Vic3File::from_slice(data)?;
-                let mut zip_sink = Vec::new();
-                let parsed_file = file.parse(&mut zip_sink)?;
-                let binary = parsed_file.as_binary().context("not vic3 binary")?;
-                let out = binary
+                let out = file
                     .melter()
                     .on_failed_resolve(self.options.resolve)
                     .verbatim(self.options.retain)
-                    .melt(&vic3save::EnvTokens)?;
-                writer.write_all(out.data())?;
+                    .melt(writer, &vic3save::EnvTokens)?;
                 Ok(MeltedDocument::Vic3(out))
             }
             MelterKind::Hoi4 => {
                 let file = hoi4save::Hoi4File::from_slice(data)?;
-                let parsed_file = file.parse()?;
-                let binary = parsed_file.as_binary().context("not hoi4 binary")?;
-                let out = binary
+                let out = file
                     .melter()
                     .on_failed_resolve(self.options.resolve)
                     .verbatim(self.options.retain)
-                    .melt(&hoi4save::EnvTokens)?;
-                writer.write_all(out.data())?;
+                    .melt(writer, &hoi4save::EnvTokens)?;
                 Ok(MeltedDocument::Hoi4(out))
             }
         }
@@ -224,7 +213,7 @@ impl MeltCommand {
                 // to subsequent commands without fail
                 Err(e) => match e.chain().find_map(|ie| ie.downcast_ref::<io::Error>()) {
                     Some(io_err) if matches!(io_err.kind(), std::io::ErrorKind::BrokenPipe) => None,
-                    _ => todo!(),
+                    _ => bail!(e),
                 },
             }
         } else {
