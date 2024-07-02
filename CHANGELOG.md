@@ -1,7 +1,7 @@
 ## v0.5.1 - 2024-07-02
 
 - All games now use a constant memory melter
-- Update to support Vic 1.7 saves
+- Update to support VIC3 1.7 saves
 
 ## v0.5.0 - 2024-05-08
 
