@@ -1,3 +1,7 @@
+## v0.5.2 - 2024-07-05
+
+- Fix regression when melting Vic3, Imperator, and CK3 text zip save files
+
 ## v0.5.1 - 2024-07-02
 
 - All games now use a constant memory melter
