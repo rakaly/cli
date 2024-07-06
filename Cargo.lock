@@ -135,7 +135,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "ck3save"
 version = "0.4.3"
-source = "git+https://github.com/rakaly/ck3save.git#a5f2c23383afc0a48491740b9ef7376b4c38e032"
+source = "git+https://github.com/rakaly/ck3save.git#8359b78716b61f6b76b286c4c4df32f15aef28fa"
 dependencies = [
  "flate2",
  "jomini",
