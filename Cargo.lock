@@ -135,7 +135,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "ck3save"
 version = "0.4.3"
-source = "git+https://github.com/rakaly/ck3save.git#8359b78716b61f6b76b286c4c4df32f15aef28fa"
+source = "git+https://github.com/rakaly/ck3save.git#bfaf863213683a784d462da25407bc55089eaa2e"
 dependencies = [
  "flate2",
  "jomini",
@@ -320,7 +320,7 @@ dependencies = [
 [[package]]
 name = "imperator-save"
 version = "0.4.2"
-source = "git+https://github.com/rakaly/imperator-save.git#aa5c642163678bdb060bdb462506c682436ebe6f"
+source = "git+https://github.com/rakaly/imperator-save.git#a02f1fe897fc3a405cd727a22d6a5ce520fb9ea5"
 dependencies = [
  "flate2",
  "jomini",
@@ -885,7 +885,7 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 [[package]]
 name = "vic3save"
 version = "0.1.0"
-source = "git+https://github.com/pdx-tools/pdx-tools#f219ff982ca8e53d29afdc5b28a01603088ac328"
+source = "git+https://github.com/pdx-tools/pdx-tools#d68e45c48eea435d9d8156eceb307bd9224f6757"
 dependencies = [
  "flate2",
  "getrandom",
