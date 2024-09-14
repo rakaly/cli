@@ -47,40 +47,11 @@ jobs:
         path: assets/saves
         key: assets/saves
 
-    - name: Set cross environment variables
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        echo "EU4_IRONMAN_TOKENS=/project/assets/tokens/eu4.txt" >> $GITHUB_ENV
-        echo "CK3_IRONMAN_TOKENS=/project/assets/tokens/ck3.txt" >> $GITHUB_ENV
-        echo "IMPERATOR_TOKENS=/project/assets/tokens/imperator.txt" >> $GITHUB_ENV
-        echo "HOI4_IRONMAN_TOKENS=/project/assets/tokens/hoi4.txt" >> $GITHUB_ENV
-        echo "VIC3_IRONMAN_TOKENS=/project/assets/tokens/vic3.txt" >> $GITHUB_ENV
-
-    - name: Set cargo environment variables
-      if: matrix.os != 'ubuntu-latest'
-      shell: bash
-      run: |
-        echo "EU4_IRONMAN_TOKENS=$current_dir/assets/tokens/eu4.txt" >> $GITHUB_ENV
-        echo "CK3_IRONMAN_TOKENS=$current_dir/assets/tokens/ck3.txt" >> $GITHUB_ENV
-        echo "IMPERATOR_TOKENS=$current_dir/assets/tokens/imperator.txt" >> $GITHUB_ENV
-        echo "HOI4_IRONMAN_TOKENS=$current_dir/assets/tokens/hoi4.txt" >> $GITHUB_ENV
-        echo "VIC3_IRONMAN_TOKENS=$current_dir/assets/tokens/vic3.txt" >> $GITHUB_ENV
-      env:
-        current_dir: ${{ github.workspace }}
-
     - name: Install Cross
       if: matrix.os == 'ubuntu-latest'
       run: |
         cargo install --version 0.2.1 cross
         echo "CARGO=cross" >> $GITHUB_ENV
-    - name: Check work
-      run: |
-        echo "CARGO=${{ env.CARGO }}"
-        echo "EU4_IRONMAN_TOKENS=${{ env.EU4_IRONMAN_TOKENS }}"
-        echo "CK3_IRONMAN_TOKENS=${{ env.CK3_IRONMAN_TOKENS }}"
-        echo "IMPERATOR_TOKENS=${{ env.IMPERATOR_TOKENS }}"
-        echo "HOI4_IRONMAN_TOKENS=${{ env.HOI4_IRONMAN_TOKENS }}"
-        echo "VIC3_IRONMAN_TOKENS=${{ env.VIC3_IRONMAN_TOKENS }}"
     - name: Build
       run: ${{ env.CARGO }} build --verbose --target "${{ matrix.build }}"
     - name: Test

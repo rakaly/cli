@@ -14,6 +14,11 @@ use std::{
 };
 use vic3save::Vic3File;
 
+use crate::tokens::{
+    ck3_tokens_resolver, eu4_tokens_resolver, hoi4_tokens_resolver, imperator_tokens_resolver,
+    vic3_tokens_resolver,
+};
+
 /// convert save and game files to json
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "json")]
@@ -79,7 +84,7 @@ impl JsonCommand {
                     file.melter()
                         .on_failed_resolve(strategy)
                         .verbatim(verbatim)
-                        .melt(&mut out, &eu4save::EnvTokens)?;
+                        .melt(&mut out, &eu4_tokens_resolver())?;
                     Eu4ParsedText::from_slice(out.get_ref().as_slice())?
                 } else {
                     Eu4ParsedText::from_slice(&data)?
@@ -87,13 +92,13 @@ impl JsonCommand {
 
                 text.reader().json().with_options(options).to_writer(writer)
             }
-            Some("ck3")  => {
+            Some("ck3") => {
                 let file = Ck3File::from_slice(&data)?;
                 let mut out = Cursor::new(Vec::new());
                 let text = if !matches!(file.encoding(), ck3save::Encoding::Text) {
                     file.melter()
                         .verbatim(true)
-                        .melt(&mut out, &ck3save::EnvTokens)?;
+                        .melt(&mut out, &ck3_tokens_resolver())?;
                     Ck3Text::from_slice(out.get_ref())?
                 } else {
                     Ck3Text::from_slice(&data)?
@@ -107,7 +112,7 @@ impl JsonCommand {
                     file.melter()
                         .on_failed_resolve(strategy)
                         .verbatim(verbatim)
-                        .melt(&mut out, &imperator_save::EnvTokens)?;
+                        .melt(&mut out, &imperator_tokens_resolver())?;
                     ImperatorText::from_slice(out.get_ref().as_slice())?
                 } else {
                     ImperatorText::from_slice(&data)?
@@ -121,7 +126,7 @@ impl JsonCommand {
                 let text = if !matches!(file.encoding(), hoi4save::Encoding::Plaintext) {
                     file.melter()
                         .verbatim(true)
-                        .melt(&mut out, &hoi4save::EnvTokens)?;
+                        .melt(&mut out, &hoi4_tokens_resolver())?;
                     Hoi4Text::from_slice(out.get_ref())?
                 } else {
                     Hoi4Text::from_slice(&data)?
@@ -133,7 +138,7 @@ impl JsonCommand {
                 let mut out = Cursor::new(Vec::new());
                 file.melter()
                     .verbatim(true)
-                    .melt(&mut out, &vic3save::EnvTokens)?;
+                    .melt(&mut out, &vic3_tokens_resolver())?;
                 let text = Hoi4Text::from_slice(out.get_ref())?;
                 text.reader().json().with_options(options).to_writer(writer)
             }

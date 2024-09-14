@@ -1,10 +1,17 @@
-use std::path::{Path, PathBuf};
+use std::{path::{Path, PathBuf}, sync::Mutex};
+
+static DOWNLOADER: Mutex<()> = Mutex::new(());
 
 /// Request data from s3 and cache it locally
 pub fn request<S: AsRef<str>>(bucket_name: &str, input: S) -> PathBuf {
     let reffed = input.as_ref();
     let cache = Path::new("assets").join("saves").join(reffed);
     if !cache.exists() {
+        let _guard = DOWNLOADER.lock().unwrap();
+        if cache.exists() {
+            return cache;
+        }
+
         let url = format!(
             "https://{}.s3.us-west-002.backblazeb2.com/{}",
             bucket_name, reffed
