@@ -12,6 +12,8 @@ use std::{
     writeln,
 };
 
+use crate::tokens::{ck3_tokens_resolver, eu4_tokens_resolver, hoi4_tokens_resolver, imperator_tokens_resolver, vic3_tokens_resolver};
+
 /// Melt a binary encoded file into the plaintext equivalent.
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "melt")]
@@ -112,7 +114,7 @@ impl Melter {
                     .melter()
                     .on_failed_resolve(self.options.resolve)
                     .verbatim(self.options.retain)
-                    .melt(writer, &eu4save::EnvTokens)?;
+                    .melt(writer, &eu4_tokens_resolver())?;
                 Ok(MeltedDocument::Eu4(out))
             }
             MelterKind::Ck3 => {
@@ -121,7 +123,7 @@ impl Melter {
                     .melter()
                     .on_failed_resolve(self.options.resolve)
                     .verbatim(self.options.retain)
-                    .melt(writer, &ck3save::EnvTokens)?;
+                    .melt(writer, &ck3_tokens_resolver())?;
                 Ok(MeltedDocument::Ck3(out))
             }
             MelterKind::Imperator => {
@@ -130,7 +132,7 @@ impl Melter {
                     .melter()
                     .on_failed_resolve(self.options.resolve)
                     .verbatim(self.options.retain)
-                    .melt(writer, &imperator_save::EnvTokens)?;
+                    .melt(writer, &imperator_tokens_resolver())?;
                 Ok(MeltedDocument::Imperator(out))
             }
             MelterKind::Vic3 => {
@@ -139,7 +141,7 @@ impl Melter {
                     .melter()
                     .on_failed_resolve(self.options.resolve)
                     .verbatim(self.options.retain)
-                    .melt(writer, &vic3save::EnvTokens)?;
+                    .melt(writer, &vic3_tokens_resolver())?;
                 Ok(MeltedDocument::Vic3(out))
             }
             MelterKind::Hoi4 => {
@@ -148,7 +150,7 @@ impl Melter {
                     .melter()
                     .on_failed_resolve(self.options.resolve)
                     .verbatim(self.options.retain)
-                    .melt(writer, &hoi4save::EnvTokens)?;
+                    .melt(writer, &hoi4_tokens_resolver())?;
                 Ok(MeltedDocument::Hoi4(out))
             }
         }

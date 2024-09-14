@@ -1,7 +1,7 @@
 mod utils;
 
 use assert_cmd::Command;
-use std::path::Path;
+use std::{collections::HashMap, path::Path};
 
 #[test]
 fn test_eu4_melt() {
@@ -16,7 +16,7 @@ fn test_eu4_melt() {
 
     let data = std::fs::read(&melted_path).unwrap();
     let file = eu4save::Eu4File::from_slice(&data).unwrap();
-    let _save = file.parse_save(&eu4save::EnvTokens).unwrap();
+    let _save = file.parse_save(&HashMap::<u16, &str>::new()).unwrap();
     assert_eq!(file.encoding(), eu4save::Encoding::Text)
 }
 
@@ -28,7 +28,7 @@ fn test_eu4_melt_stdout() {
 
     let out = assert.get_output();
     let file = eu4save::Eu4File::from_slice(&out.stdout).unwrap();
-    let _save = file.parse_save(&eu4save::EnvTokens).unwrap();
+    let _save = file.parse_save(&HashMap::<u16, &str>::new()).unwrap();
     assert_eq!(file.encoding(), eu4save::Encoding::Text)
 }
 
@@ -49,7 +49,7 @@ fn test_eu4_specify_format() {
 
     let out = assert.get_output();
     let file = eu4save::Eu4File::from_slice(&out.stdout).unwrap();
-    let _save = file.parse_save(&eu4save::EnvTokens).unwrap();
+    let _save = file.parse_save(&HashMap::<u16, &str>::new()).unwrap();
     assert_eq!(file.encoding(), eu4save::Encoding::Text)
 }
 
@@ -67,7 +67,7 @@ fn test_eu4_melt_to_out() {
 
     let data = std::fs::read(&output_path).unwrap();
     let file = eu4save::Eu4File::from_slice(&data).unwrap();
-    let _save = file.parse_save(&eu4save::EnvTokens).unwrap();
+    let _save = file.parse_save(&HashMap::<u16, &str>::new()).unwrap();
     assert_eq!(file.encoding(), eu4save::Encoding::Text)
 }
 
@@ -85,7 +85,7 @@ fn test_eu4_melt_stdin_to_stdout() {
 
     let out = assert.get_output();
     let file = eu4save::Eu4File::from_slice(&out.stdout).unwrap();
-    let _save = file.parse_save(&eu4save::EnvTokens).unwrap();
+    let _save = file.parse_save(&HashMap::<u16, &str>::new()).unwrap();
     assert_eq!(file.encoding(), eu4save::Encoding::Text)
 }
 
@@ -102,7 +102,7 @@ fn test_eu4_melt_retain() {
 
     let out = assert.get_output();
     let file = eu4save::Eu4File::from_slice(&out.stdout).unwrap();
-    let _save = file.parse_save(&eu4save::EnvTokens).unwrap();
+    let _save = file.parse_save(&HashMap::<u16, &str>::new()).unwrap();
     assert_eq!(file.encoding(), eu4save::Encoding::Text)
 }
 
