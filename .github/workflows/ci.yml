@@ -53,7 +53,7 @@ jobs:
         cargo install --version 0.2.1 cross
         echo "CARGO=cross" >> $GITHUB_ENV
     - name: Build
-      run: ls assets/tokens/tokens && ${{ env.CARGO }} build --verbose --target "${{ matrix.build }}"
+      run: ls assets/tokens && ${{ env.CARGO }} build --verbose --target "${{ matrix.build }}"
     - name: Test
       run: ${{ env.CARGO }} test --verbose --target "${{ matrix.build }}"
     - name: Build Release Artifact
