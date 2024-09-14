@@ -12,7 +12,10 @@ use std::{
     writeln,
 };
 
-use crate::tokens::{ck3_tokens_resolver, eu4_tokens_resolver, hoi4_tokens_resolver, imperator_tokens_resolver, vic3_tokens_resolver};
+use crate::tokens::{
+    ck3_tokens_resolver, eu4_tokens_resolver, hoi4_tokens_resolver, imperator_tokens_resolver,
+    vic3_tokens_resolver,
+};
 
 /// Melt a binary encoded file into the plaintext equivalent.
 #[derive(FromArgs, PartialEq, Debug)]

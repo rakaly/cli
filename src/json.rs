@@ -14,7 +14,10 @@ use std::{
 };
 use vic3save::Vic3File;
 
-use crate::tokens::{ck3_tokens_resolver, eu4_tokens_resolver, hoi4_tokens_resolver, imperator_tokens_resolver, vic3_tokens_resolver};
+use crate::tokens::{
+    ck3_tokens_resolver, eu4_tokens_resolver, hoi4_tokens_resolver, imperator_tokens_resolver,
+    vic3_tokens_resolver,
+};
 
 /// convert save and game files to json
 #[derive(FromArgs, PartialEq, Debug)]
@@ -89,7 +92,7 @@ impl JsonCommand {
 
                 text.reader().json().with_options(options).to_writer(writer)
             }
-            Some("ck3")  => {
+            Some("ck3") => {
                 let file = Ck3File::from_slice(&data)?;
                 let mut out = Cursor::new(Vec::new());
                 let text = if !matches!(file.encoding(), ck3save::Encoding::Text) {
