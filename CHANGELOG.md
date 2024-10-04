@@ -1,3 +1,7 @@
+## v0.5.3 - 2024-10-04
+
+- Update to support CK3 1.13 saves
+
 ## v0.5.2 - 2024-07-05
 
 - Fix regression when melting Vic3, Imperator, and CK3 text zip save files
