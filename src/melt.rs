@@ -1,7 +1,7 @@
 use anyhow::{anyhow, bail, Context};
 use argh::FromArgs;
 use ck3save::FailedResolveStrategy;
-use memmap::MmapOptions;
+use memmap2::MmapOptions;
 use std::{
     collections::HashSet,
     ffi::OsString,
