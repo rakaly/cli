@@ -1,4 +1,7 @@
-use std::{path::{Path, PathBuf}, sync::Mutex};
+use std::{
+    path::{Path, PathBuf},
+    sync::Mutex,
+};
 
 static DOWNLOADER: Mutex<()> = Mutex::new(());
 
