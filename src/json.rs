@@ -1,9 +1,9 @@
 use anyhow::anyhow;
 use argh::FromArgs;
-use ck3save::{file::Ck3Text, Ck3File};
+use ck3save::{file::Ck3ParsedText, Ck3File};
 use eu4save::{file::Eu4ParsedText, Eu4File};
-use hoi4save::{file::Hoi4Text, Hoi4File};
-use imperator_save::{file::ImperatorText, ImperatorFile};
+use hoi4save::{file::Hoi4ParsedText, Hoi4File};
+use imperator_save::{file::ImperatorParsedText, ImperatorFile};
 use jomini::{
     json::{DuplicateKeyMode, JsonOptions},
     TextTape,
@@ -12,7 +12,7 @@ use std::{
     io::{BufWriter, Cursor},
     path::PathBuf,
 };
-use vic3save::Vic3File;
+use vic3save::{file::Vic3ParsedText, Vic3File};
 
 use crate::tokens::{
     ck3_tokens_resolver, eu4_tokens_resolver, hoi4_tokens_resolver, imperator_tokens_resolver,
@@ -81,10 +81,10 @@ impl JsonCommand {
                 let file = Eu4File::from_slice(&data)?;
                 let mut out = Cursor::new(Vec::new());
                 let text = if file.encoding().is_binary() || file.encoding().is_zip() {
-                    file.melter()
+                    let options = eu4save::MeltOptions::new()
                         .on_failed_resolve(strategy)
-                        .verbatim(verbatim)
-                        .melt(&mut out, &eu4_tokens_resolver())?;
+                        .verbatim(verbatim);
+                    file.melt(options, eu4_tokens_resolver(), &mut out)?;
                     Eu4ParsedText::from_slice(out.get_ref().as_slice())?
                 } else {
                     Eu4ParsedText::from_slice(&data)?
@@ -96,26 +96,28 @@ impl JsonCommand {
                 let file = Ck3File::from_slice(&data)?;
                 let mut out = Cursor::new(Vec::new());
                 let text = if !matches!(file.encoding(), ck3save::Encoding::Text) {
-                    file.melter()
-                        .verbatim(true)
-                        .melt(&mut out, &ck3_tokens_resolver())?;
-                    Ck3Text::from_slice(out.get_ref())?
+                    let options = ck3save::MeltOptions::new()
+                        .on_failed_resolve(strategy)
+                        .verbatim(verbatim);
+                    file.melt(options, ck3_tokens_resolver(), &mut out)?;
+                    Ck3ParsedText::from_slice(out.get_ref().as_slice())?
                 } else {
-                    Ck3Text::from_slice(&data)?
+                    Ck3ParsedText::from_slice(&data)?
                 };
+
                 text.reader().json().with_options(options).to_writer(writer)
             }
             Some("rome") => {
                 let file = ImperatorFile::from_slice(&data)?;
                 let mut out = Cursor::new(Vec::new());
                 let text = if !matches!(file.encoding(), imperator_save::Encoding::Text) {
-                    file.melter()
+                    let options = imperator_save::MeltOptions::new()
                         .on_failed_resolve(strategy)
-                        .verbatim(verbatim)
-                        .melt(&mut out, &imperator_tokens_resolver())?;
-                    ImperatorText::from_slice(out.get_ref().as_slice())?
+                        .verbatim(verbatim);
+                    file.melt(options, imperator_tokens_resolver(), &mut out)?;
+                    ImperatorParsedText::from_slice(out.get_ref().as_slice())?
                 } else {
-                    ImperatorText::from_slice(&data)?
+                    ImperatorParsedText::from_slice(&data)?
                 };
 
                 text.reader().json().with_options(options).to_writer(writer)
@@ -124,22 +126,30 @@ impl JsonCommand {
                 let file = Hoi4File::from_slice(&data)?;
                 let mut out = Cursor::new(Vec::new());
                 let text = if !matches!(file.encoding(), hoi4save::Encoding::Plaintext) {
-                    file.melter()
-                        .verbatim(true)
-                        .melt(&mut out, &hoi4_tokens_resolver())?;
-                    Hoi4Text::from_slice(out.get_ref())?
+                    let options = hoi4save::MeltOptions::new()
+                        .on_failed_resolve(strategy)
+                        .verbatim(verbatim);
+                    file.melt(options, hoi4_tokens_resolver(), &mut out)?;
+                    Hoi4ParsedText::from_slice(out.get_ref().as_slice())?
                 } else {
-                    Hoi4Text::from_slice(&data)?
+                    Hoi4ParsedText::from_slice(&data)?
                 };
+
                 text.reader().json().with_options(options).to_writer(writer)
             }
             Some("v3") => {
                 let file = Vic3File::from_slice(&data)?;
                 let mut out = Cursor::new(Vec::new());
-                file.melter()
-                    .verbatim(true)
-                    .melt(&mut out, &vic3_tokens_resolver())?;
-                let text = Hoi4Text::from_slice(out.get_ref())?;
+                let text = if !matches!(file.encoding(), vic3save::Encoding::Text) {
+                    let options = vic3save::MeltOptions::new()
+                        .on_failed_resolve(strategy)
+                        .verbatim(verbatim);
+                    file.melt(options, vic3_tokens_resolver(), &mut out)?;
+                    Vic3ParsedText::from_slice(out.get_ref().as_slice())?
+                } else {
+                    Vic3ParsedText::from_slice(&data)?
+                };
+
                 text.reader().json().with_options(options).to_writer(writer)
             }
             _ => {

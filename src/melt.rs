@@ -113,47 +113,42 @@ impl Melter {
         match self.kind {
             MelterKind::Eu4 => {
                 let file = eu4save::Eu4File::from_slice(data)?;
-                let out = file
-                    .melter()
+                let options = eu4save::MeltOptions::new()
                     .on_failed_resolve(self.options.resolve)
-                    .verbatim(self.options.retain)
-                    .melt(writer, &eu4_tokens_resolver())?;
+                    .verbatim(self.options.retain);
+                let out = file.melt(options, eu4_tokens_resolver(), writer)?;
                 Ok(MeltedDocument::Eu4(out))
             }
             MelterKind::Ck3 => {
                 let file = ck3save::Ck3File::from_slice(data)?;
-                let out = file
-                    .melter()
+                let options = ck3save::MeltOptions::new()
                     .on_failed_resolve(self.options.resolve)
-                    .verbatim(self.options.retain)
-                    .melt(writer, &ck3_tokens_resolver())?;
+                    .verbatim(self.options.retain);
+                let out = file.melt(options, ck3_tokens_resolver(), writer)?;
                 Ok(MeltedDocument::Ck3(out))
             }
             MelterKind::Imperator => {
                 let file = imperator_save::ImperatorFile::from_slice(data)?;
-                let out = file
-                    .melter()
+                let options = imperator_save::MeltOptions::new()
                     .on_failed_resolve(self.options.resolve)
-                    .verbatim(self.options.retain)
-                    .melt(writer, &imperator_tokens_resolver())?;
+                    .verbatim(self.options.retain);
+                let out = file.melt(options, imperator_tokens_resolver(), writer)?;
                 Ok(MeltedDocument::Imperator(out))
             }
             MelterKind::Vic3 => {
                 let file = vic3save::Vic3File::from_slice(data)?;
-                let out = file
-                    .melter()
+                let options = vic3save::MeltOptions::new()
                     .on_failed_resolve(self.options.resolve)
-                    .verbatim(self.options.retain)
-                    .melt(writer, &vic3_tokens_resolver())?;
+                    .verbatim(self.options.retain);
+                let out = file.melt(options, vic3_tokens_resolver(), writer)?;
                 Ok(MeltedDocument::Vic3(out))
             }
             MelterKind::Hoi4 => {
                 let file = hoi4save::Hoi4File::from_slice(data)?;
-                let out = file
-                    .melter()
+                let options = hoi4save::MeltOptions::new()
                     .on_failed_resolve(self.options.resolve)
-                    .verbatim(self.options.retain)
-                    .melt(writer, &hoi4_tokens_resolver())?;
+                    .verbatim(self.options.retain);
+                let out = file.melt(options, hoi4_tokens_resolver(), writer)?;
                 Ok(MeltedDocument::Hoi4(out))
             }
         }
