@@ -2,7 +2,7 @@
 
 # Rakaly CLI
 
-The Rakaly CLI provides a convenient way of accessing [Rakaly](https://rakaly.com/eu4/) functionality locally.
+The Rakaly CLI provides a convenient way of accessing [PDX.Tools](https://pdx.tools/) functionality locally.
 
 ## Features
 
