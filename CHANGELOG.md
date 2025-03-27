@@ -1,3 +1,7 @@
+## v0.5.6 - 2025-03-27
+
+- Update to support CK3 1.15.0 saves
+
 ## v0.5.5 - 2025-03-12
 
 - Update to support HOI4 1.16.0 saves
