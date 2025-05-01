@@ -2,6 +2,7 @@ mod cli;
 mod json;
 mod melt;
 mod tokens;
+mod watch;
 
 fn main() {
     std::process::exit(match cli::run() {
