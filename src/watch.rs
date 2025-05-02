@@ -39,12 +39,14 @@ pub(crate) struct WatchCommand {
     #[argh(option, short = 'o')]
     out_dir: Option<PathBuf>,
 
-    /// frequency of snapshot creation. Can be 'any' to create a snapshot on any
-    /// date change, 'yearly' to only create snapshots when the year changes
-    /// (default), or 'decade' to only create snapshots when the decade changes
-    /// (years ending in 0).
-    #[argh(option, default = "String::from(\"yearly\")")]
-    frequency: String,
+    /// frequency of snapshot creation. Options: 'daily' to create a snapshot on
+    /// any date change, 'monthly' for each month, 'quarterly' for every three
+    /// months, 'yearly' for annual snapshots, or 'decade' for snapshots when
+    /// the decade changes (years ending in 0). If not specified, defaults are
+    /// based on game type: EU4/CK3/Imperator=yearly, Victoria 3=quarterly,
+    /// HOI4=monthly.
+    #[argh(option)]
+    frequency: Option<String>,
 
     /// file to watch for changes
     #[argh(positional)]
@@ -55,7 +57,11 @@ pub(crate) struct WatchCommand {
 #[derive(Debug, PartialEq, Clone, Copy)]
 enum SnapshotFrequency {
     /// Take a snapshot on any date change
-    AnyChange,
+    Daily,
+    /// Take a snapshot only when the month changes
+    Monthly,
+    /// Take a snapshot every three months (quarters)
+    Quarterly,
     /// Take a snapshot only when the year changes
     Yearly,
     /// Take a snapshot only when the decade changes (year % 10 == 0)
@@ -67,11 +73,13 @@ impl FromStr for SnapshotFrequency {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "any" | "anychange" => Ok(SnapshotFrequency::AnyChange),
+            "daily" | "day" => Ok(SnapshotFrequency::Daily),
+            "monthly" | "month" => Ok(SnapshotFrequency::Monthly),
+            "quarterly" | "quarter" => Ok(SnapshotFrequency::Quarterly),
             "year" | "yearly" => Ok(SnapshotFrequency::Yearly),
             "decade" => Ok(SnapshotFrequency::Decade),
             _ => Err(anyhow!(
-                "Unrecognized snapshot frequency. Use 'any', 'yearly', or 'decade'"
+                "Unrecognized snapshot frequency. Use 'daily', 'monthly', 'quarterly', 'yearly', or 'decade'"
             )),
         }
     }
@@ -103,6 +111,18 @@ impl FromStr for GameType {
     }
 }
 
+impl GameType {
+    fn default_frequency(&self) -> SnapshotFrequency {
+        match self {
+            GameType::Eu4 => SnapshotFrequency::Yearly,
+            GameType::Ck3 => SnapshotFrequency::Yearly,
+            GameType::Imperator => SnapshotFrequency::Yearly,
+            GameType::Vic3 => SnapshotFrequency::Quarterly,
+            GameType::Hoi4 => SnapshotFrequency::Monthly,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord)]
 struct GameDate {
     year: i16,
@@ -115,6 +135,10 @@ impl GameDate {
         (self.year / 10) * 10
     }
 
+    fn quarter(&self) -> u8 {
+        (self.month - 1) / 3 + 1
+    }
+
     fn should_snapshot(
         &self,
         last_snapshot: Option<&GameDate>,
@@ -123,7 +147,11 @@ impl GameDate {
         match last_snapshot {
             None => true, // Always snapshot if no previous snapshot
             Some(last) => match frequency {
-                SnapshotFrequency::AnyChange => true, // Always snapshot on any change
+                SnapshotFrequency::Daily => true, // Always snapshot on any change
+                SnapshotFrequency::Monthly => self.year != last.year || self.month != last.month,
+                SnapshotFrequency::Quarterly => {
+                    self.year != last.year || self.quarter() != last.quarter()
+                }
                 SnapshotFrequency::Yearly => self.year != last.year,
                 SnapshotFrequency::Decade => self.decade() != last.decade(),
             },
@@ -166,8 +194,15 @@ impl WatchCommand {
 
         let game_type = self.determine_game_type()?;
 
-        // Parse the snapshot frequency
-        let frequency = self.frequency.parse::<SnapshotFrequency>()?;
+        // Parse the snapshot frequency or use the game-specific default
+        let frequency = match &self.frequency {
+            Some(freq_str) => freq_str.parse::<SnapshotFrequency>()?,
+            None => {
+                let default = game_type.default_frequency();
+                info!("Using default frequency for {:?}: {:?}", game_type, default);
+                default
+            }
+        };
         info!("Snapshot frequency: {:?}", frequency);
 
         let path = self.file.clone();
@@ -295,7 +330,9 @@ impl WatchCommand {
                     "Skipping snapshot for date {}, waiting for next {} change",
                     save_info.date,
                     match frequency {
-                        SnapshotFrequency::AnyChange => "date",
+                        SnapshotFrequency::Daily => "date",
+                        SnapshotFrequency::Monthly => "month",
+                        SnapshotFrequency::Quarterly => "quarter",
                         SnapshotFrequency::Yearly => "year",
                         SnapshotFrequency::Decade => "decade",
                     }
