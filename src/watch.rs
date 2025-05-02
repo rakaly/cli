@@ -318,7 +318,7 @@ impl WatchCommand {
                 Ok(save_info) => {
                     let duration = start.elapsed();
                     info!(
-                        "Processed file with date: {} [{}ms]",
+                        "Detected file with date: {} [{}ms]",
                         save_info.date,
                         duration.as_millis()
                     );
@@ -555,42 +555,51 @@ impl WatchCommand {
         path
     }
 
+    fn find_snapshots(
+        &self,
+        out_dir: &Path,
+    ) -> anyhow::Result<impl Iterator<Item = (PathBuf, GameDate)> + use<'_>> {
+        let base_filename = self
+            .file
+            .file_stem()
+            .expect("to have a file stem")
+            .to_str()
+            .expect("to convert filename to string");
+
+        let entries = fs::read_dir(out_dir)?;
+        let entries = entries.filter_map(Result::ok).filter_map(move |entry| {
+            let path = entry.path();
+            if !path.is_file() {
+                return None;
+            }
+
+            let filename = path.file_stem()?.to_str()?;
+
+            // Check if the filename starts with base_filename followed by underscore
+            if !filename.starts_with(base_filename)
+                || !filename[base_filename.len()..].starts_with('_')
+            {
+                return None;
+            }
+
+            // Extract date part (everything after base_name_)
+            let date_part = &filename[base_filename.len() + 1..];
+
+            // Try to parse the date in the format YYYY-MM-DD
+            let mut parts = date_part.split('-');
+            let year = parts.next()?.parse::<i16>().ok()?;
+            let month = parts.next()?.parse::<u8>().ok()?;
+            let day = parts.next()?.parse::<u8>().ok()?;
+
+            Some((path, GameDate { year, month, day }))
+        });
+        Ok(entries)
+    }
+
     fn find_latest_snapshot(&self, out_dir: &Path) -> Option<GameDate> {
-        if !out_dir.exists() {
-            return None;
-        }
-
-        let base_filename = self.file.file_stem()?.to_str()?;
-
-        let entries = fs::read_dir(out_dir).ok()?;
-        entries
-            .filter_map(Result::ok)
-            .filter_map(|entry| {
-                let path = entry.path();
-                if !path.is_file() {
-                    return None;
-                }
-
-                let filename = path.file_stem()?.to_str()?;
-
-                // Check if the filename starts with base_filename followed by underscore
-                if !filename.starts_with(base_filename)
-                    || !filename[base_filename.len()..].starts_with('_')
-                {
-                    return None;
-                }
-
-                // Extract date part (everything after base_name_)
-                let date_part = &filename[base_filename.len() + 1..];
-
-                // Try to parse the date in the format YYYY-MM-DD
-                let mut parts = date_part.split('-');
-                let year = parts.next()?.parse::<i16>().ok()?;
-                let month = parts.next()?.parse::<u8>().ok()?;
-                let day = parts.next()?.parse::<u8>().ok()?;
-
-                Some(GameDate { year, month, day })
-            })
+        self.find_snapshots(out_dir)
+            .ok()?
+            .map(|(_, date)| date)
             .max()
     }
 }
