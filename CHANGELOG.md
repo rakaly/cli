@@ -1,4 +1,8 @@
-## v0.5.7 - 2025-03-28
+## v0.6.0 - 2025-05-02
+
+- Add `watch` command that will monitor a save file and create a copy at desired in-game date intervals
+
+## v0.5.7 - 2025-04-28
 
 - Update to support CK3 1.16.0 saves
 
