@@ -40,10 +40,10 @@ pub(crate) struct WatchCommand {
     out_dir: Option<PathBuf>,
 
     /// frequency of snapshot creation. Can be 'any' to create a snapshot on any
-    /// date change (default), 'yearly' to only create snapshots when the year
-    /// changes, or 'decade' to only create snapshots when the decade changes
+    /// date change, 'yearly' to only create snapshots when the year changes
+    /// (default), or 'decade' to only create snapshots when the decade changes
     /// (years ending in 0).
-    #[argh(option, default = "String::from(\"any\")")]
+    #[argh(option, default = "String::from(\"yearly\")")]
     frequency: String,
 
     /// file to watch for changes
@@ -103,7 +103,7 @@ impl FromStr for GameType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Ord)]
 struct GameDate {
     year: i16,
     month: u8,
@@ -195,8 +195,30 @@ impl WatchCommand {
         // Start watching the parent directory for changes
         watcher.watch(parent_dir.as_ref(), RecursiveMode::NonRecursive)?;
 
+        let out_dir = self
+            .out_dir
+            .as_deref()
+            .unwrap_or_else(|| self.file.parent().unwrap_or_else(|| Path::new(".")));
+
         // Track the last snapshot date for each game
-        let mut last_snapshot: Option<GameDate> = None;
+        // Look for existing snapshots in the output directory when starting
+        let start = Instant::now();
+        let mut last_snapshot = self.find_latest_snapshot(out_dir);
+        if let Some(ref snapshot) = last_snapshot {
+            let elapsed = start.elapsed();
+            info!(
+                "Starting from previous snapshot: {} [{}ms]",
+                snapshot,
+                elapsed.as_millis()
+            );
+        } else {
+            let elapsed = start.elapsed();
+            debug!(
+                "No previous snapshots found in output directory [{}ms]",
+                elapsed.as_millis()
+            );
+        }
+
         let mut ignore_next = false;
 
         // Set up Ctrl+C handler with an atomic flag
@@ -281,7 +303,7 @@ impl WatchCommand {
                 continue;
             }
 
-            let out_path = self.create_output_path(&save_info.date.to_string());
+            let out_path = self.create_output_path(&save_info.date.to_string(), out_dir);
 
             // Create parent directory if it doesn't exist
             if let Some(parent) = out_path.parent() {
@@ -459,12 +481,7 @@ impl WatchCommand {
             .map_err(|_| anyhow!("Format of file unknown, please pass known format option"))
     }
 
-    fn create_output_path(&self, date: &str) -> PathBuf {
-        let out_dir = self
-            .out_dir
-            .as_deref()
-            .unwrap_or_else(|| self.file.parent().unwrap_or_else(|| Path::new(".")));
-
+    fn create_output_path(&self, date: &str, out_dir: &Path) -> PathBuf {
         let filename = self.file.file_stem().unwrap_or_default();
         let extension = self.file.extension().unwrap_or_default();
 
@@ -480,5 +497,44 @@ impl WatchCommand {
         }
 
         path
+    }
+
+    fn find_latest_snapshot(&self, out_dir: &Path) -> Option<GameDate> {
+        if !out_dir.exists() {
+            return None;
+        }
+
+        let base_filename = self.file.file_stem()?.to_str()?;
+
+        let entries = fs::read_dir(out_dir).ok()?;
+        entries
+            .filter_map(Result::ok)
+            .filter_map(|entry| {
+                let path = entry.path();
+                if !path.is_file() {
+                    return None;
+                }
+
+                let filename = path.file_stem()?.to_str()?;
+
+                // Check if the filename starts with base_filename followed by underscore
+                if !filename.starts_with(base_filename)
+                    || !filename[base_filename.len()..].starts_with('_')
+                {
+                    return None;
+                }
+
+                // Extract date part (everything after base_name_)
+                let date_part = &filename[base_filename.len() + 1..];
+
+                // Try to parse the date in the format YYYY-MM-DD
+                let mut parts = date_part.split('-');
+                let year = parts.next()?.parse::<i16>().ok()?;
+                let month = parts.next()?.parse::<u8>().ok()?;
+                let day = parts.next()?.parse::<u8>().ok()?;
+
+                Some(GameDate { year, month, day })
+            })
+            .max()
     }
 }
