@@ -81,3 +81,36 @@ When converting game files, pass the character encoding so that non-ascii charac
 rakaly json --format windows-1252 achievements.txt
 ```
 
+### Watch and archive saves
+
+The `rakaly watch` command continuously monitors a save file and creates snapshots to maintain a historical record of the campaign at desired intervals.
+
+When there is file activity (eg, when the game saves), the command parses the save to extract the current in-game date. The command compares the current save's date to the date of the last snapshot taken (if any). If the criteria for the frequency are met (eg, the year changed for yearly frequency), it creates a copy of the modified save file in the specified output directory.
+
+For instance, start an ironman EU4 campaign named "hsa" and run the watch command:
+
+```bash
+rakaly watch hsa.eu4 
+```
+
+And soon enough, an "hsa" directory will be created and start to fill with saves as EU4 autosaves roughly every three months:
+
+- `hsa/hsa_1444-11-11.eu4`
+- `hsa/hsa_1445-03-01.eu4`
+- `hsa/hsa_1446-03-01.eu4`
+
+In the above example, we only see yearly snapshots, as that is the default snapshot interval the `watch` command uses for EU4 saves. EU4's first autosave in 1445 was in March, hence the snapshot date of 1445-03-01. Note that EU4 does not have consistent autosave dates between sessions.
+
+The snapshot interval can be customized:
+
+- daily
+- monthly (default for HOI4)
+- quarterly (default for Vic3)
+- yearly (default for EU4, CK3, and Imperator)
+- decade
+
+Note that these snapshot intervals may differ from how frequently the game autosaves.
+
+When started, the command scans the output directory for existing snapshots related to the input file. It identifies the most recent snapshot date and will only create new snapshots for in-game dates after that one, according to the frequency rules. This prevents duplicate snapshots if you restart the watcher.
+
+The watch command is intended to be minimal. For a fully featured save game manager, see [pdxu](https://github.com/crschnick/pdx_unlimiter).
