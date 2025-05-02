@@ -1045,6 +1045,7 @@ dependencies = [
  "memmap2",
  "native-tls",
  "notify",
+ "serde",
  "vic3save",
 ]
 
