@@ -183,15 +183,6 @@ impl WatchCommand {
             bail!("File does not exist: {}", self.file.display());
         }
 
-        // Create output directory if specified and doesn't exist
-        if let Some(out_dir) = &self.out_dir {
-            if !out_dir.exists() {
-                fs::create_dir_all(out_dir).with_context(|| {
-                    format!("Failed to create output directory: {}", out_dir.display())
-                })?;
-            }
-        }
-
         let game_type = self.determine_game_type()?;
 
         // Parse the snapshot frequency or use the game-specific default
@@ -230,15 +221,32 @@ impl WatchCommand {
         // Start watching the parent directory for changes
         watcher.watch(parent_dir.as_ref(), RecursiveMode::NonRecursive)?;
 
-        let out_dir = self
-            .out_dir
-            .as_deref()
-            .unwrap_or_else(|| self.file.parent().unwrap_or_else(|| Path::new(".")));
+        // Default output directory is subdirectory with the file stem name in the parent directory
+        let out_dir = match &self.out_dir {
+            Some(dir) => dir.clone(),
+            None => {
+                let parent = self.file.parent().unwrap_or_else(|| Path::new("."));
+                let filename = self.file.file_stem().unwrap_or_default();
+                let mut path = parent.to_path_buf();
+                path.push(filename);
+
+                path
+            }
+        };
+
+        // Create the output directory if it doesn't exist
+        if !out_dir.exists() {
+            fs::create_dir_all(&out_dir).with_context(|| {
+                format!("Failed to create output directory: {}", out_dir.display())
+            })?;
+        }
+
+        info!("Output directory: {}", out_dir.display());
 
         // Track the last snapshot date for each game
         // Look for existing snapshots in the output directory when starting
         let start = Instant::now();
-        let mut last_snapshot = self.find_latest_snapshot(out_dir);
+        let mut last_snapshot = self.find_latest_snapshot(&out_dir);
         if let Some(ref snapshot) = last_snapshot {
             let elapsed = start.elapsed();
             info!(
@@ -340,7 +348,7 @@ impl WatchCommand {
                 continue;
             }
 
-            let out_path = self.create_output_path(&save_info.date.to_string(), out_dir);
+            let out_path = self.create_output_path(&save_info.date.to_string(), &out_dir);
 
             // Create parent directory if it doesn't exist
             if let Some(parent) = out_path.parent() {
