@@ -1,3 +1,7 @@
+## v0.6.1 - 2025-06-20
+
+- Update to support Vic3 1.9 saves
+
 ## v0.6.0 - 2025-05-02
 
 - Add `watch` command that will monitor a save file and create a copy at desired in-game date intervals
