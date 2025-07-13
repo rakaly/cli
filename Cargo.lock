@@ -206,7 +206,7 @@ checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
 [[package]]
 name = "ck3save"
 version = "0.4.3"
-source = "git+https://github.com/rakaly/ck3save.git#0c237ebdcba40a97d1f1b4579f6596d057de0a80"
+source = "git+https://github.com/rakaly/ck3save.git#bd967deabe77d10c178ec461026b489fd524977e"
 dependencies = [
  "flate2",
  "jomini",
@@ -330,7 +330,7 @@ dependencies = [
 [[package]]
 name = "eu4save"
 version = "0.8.2"
-source = "git+https://github.com/rakaly/eu4save.git#cd78368a2fc62dedf1ab8227c916e76f2c9d8aca"
+source = "git+https://github.com/rakaly/eu4save.git#3a3f74c6e8a9a794d8e846f2ef104137fa5ccdac"
 dependencies = [
  "flate2",
  "jomini",
@@ -441,7 +441,7 @@ checksum = "d231dfb89cfffdbc30e7fc41579ed6066ad03abda9e567ccafae602b97ec5024"
 [[package]]
 name = "hoi4save"
 version = "0.3.4"
-source = "git+https://github.com/rakaly/hoi4save.git#1b981ff230f58e2c6b4cea97f346ace7a9e1126d"
+source = "git+https://github.com/rakaly/hoi4save.git#df3f11e840597dd6761f38c41f500aee8ee55a7a"
 dependencies = [
  "jomini",
  "serde",
@@ -601,7 +601,7 @@ dependencies = [
 [[package]]
 name = "imperator-save"
 version = "0.4.2"
-source = "git+https://github.com/rakaly/imperator-save.git#045c8bf0e34b48fbdc276b86f32c8cc5e197a736"
+source = "git+https://github.com/rakaly/imperator-save.git#d5aeb69b80c21af2db2a65c0db400c81ceb0f4bc"
 dependencies = [
  "flate2",
  "jomini",
@@ -1094,9 +1094,9 @@ checksum = "60a357793950651c4ed0f3f52338f53b2f809f32d83a07f72909fa13e4c6c1e3"
 
 [[package]]
 name = "rawzip"
-version = "0.1.0"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f9f8d50ef197167638ec8912cac430639812264c455f5d861210524705af15b"
+checksum = "15175d688c45677b5c1973398e0682a3efd381d3c7c0ccce86791d998986fac7"
 
 [[package]]
 name = "redox_syscall"
@@ -1387,7 +1387,7 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 [[package]]
 name = "vic3save"
 version = "0.1.0"
-source = "git+https://github.com/pdx-tools/pdx-tools#f2a2245184dad0c63e992847b6d0b6cb783c8c1c"
+source = "git+https://github.com/pdx-tools/pdx-tools#5ed0e2b82ff77ca7449a476dfefc047a87e49554"
 dependencies = [
  "flate2",
  "getrandom 0.2.15",
