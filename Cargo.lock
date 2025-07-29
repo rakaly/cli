@@ -209,7 +209,7 @@ version = "0.4.3"
 source = "git+https://github.com/rakaly/ck3save.git#bd967deabe77d10c178ec461026b489fd524977e"
 dependencies = [
  "flate2",
- "jomini",
+ "jomini 0.28.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rawzip",
  "serde",
  "thiserror",
@@ -333,7 +333,7 @@ version = "0.8.2"
 source = "git+https://github.com/rakaly/eu4save.git#3a3f74c6e8a9a794d8e846f2ef104137fa5ccdac"
 dependencies = [
  "flate2",
- "jomini",
+ "jomini 0.28.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rawzip",
  "serde",
  "thiserror",
@@ -443,7 +443,7 @@ name = "hoi4save"
 version = "0.3.4"
 source = "git+https://github.com/rakaly/hoi4save.git#df3f11e840597dd6761f38c41f500aee8ee55a7a"
 dependencies = [
- "jomini",
+ "jomini 0.28.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "thiserror",
 ]
@@ -604,7 +604,7 @@ version = "0.4.2"
 source = "git+https://github.com/rakaly/imperator-save.git#d5aeb69b80c21af2db2a65c0db400c81ceb0f4bc"
 dependencies = [
  "flate2",
- "jomini",
+ "jomini 0.28.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rawzip",
  "serde",
  "thiserror",
@@ -673,7 +673,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "85f314ee2027b37925dae74743e4127c84cdd5d96775e6b32f6686d126b4ebf7"
 dependencies = [
  "itoa",
- "jomini_derive",
+ "jomini_derive 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "jomini"
+version = "0.28.0"
+source = "git+https://github.com/rakaly/jomini.git?branch=master#11f49c439d093d4b1088f10a2dd6b24625d31904"
+dependencies = [
+ "itoa",
+ "jomini_derive 0.3.0 (git+https://github.com/rakaly/jomini.git?branch=master)",
  "serde",
  "serde_json",
 ]
@@ -683,6 +694,15 @@ name = "jomini_derive"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ada358784500edb84f3e48b8d3758b4d1e9fe23f53b1d8d7b235bf1e6532021a"
+dependencies = [
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "jomini_derive"
+version = "0.3.0"
+source = "git+https://github.com/rakaly/jomini.git?branch=master#11f49c439d093d4b1088f10a2dd6b24625d31904"
 dependencies = [
  "quote",
  "syn",
@@ -1047,7 +1067,8 @@ dependencies = [
  "eu4save",
  "hoi4save",
  "imperator-save",
- "jomini",
+ "jomini 0.28.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "jomini 0.28.0 (git+https://github.com/rakaly/jomini.git?branch=master)",
  "log",
  "memmap2",
  "native-tls",
@@ -1391,7 +1412,7 @@ source = "git+https://github.com/pdx-tools/pdx-tools#5ed0e2b82ff77ca7449a476dfef
 dependencies = [
  "flate2",
  "getrandom 0.2.15",
- "jomini",
+ "jomini 0.28.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "mathru",
  "rawzip",
  "serde",
