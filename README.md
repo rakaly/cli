@@ -81,6 +81,27 @@ When converting game files, pass the character encoding so that non-ascii charac
 rakaly json --format windows-1252 achievements.txt
 ```
 
+#### Variable Interpolation
+
+The `json` command supports variable interpolation.
+
+```bash
+rakaly json --interpolation --format utf8 config.txt
+```
+
+Input:
+
+```
+@scale = 10
+position = { x = @[scale * 2] y = @scale }
+```
+
+Output:
+
+```json
+{"position":{"x":20,"y":10}}
+```
+
 ### Watch and archive saves
 
 The `rakaly watch` command continuously monitors a save file and creates snapshots to maintain a historical record of the campaign at desired intervals.
