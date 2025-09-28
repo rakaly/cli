@@ -281,17 +281,15 @@ impl<'a> InterpolatedTape<'a> {
 
         // Use jomini's built-in JSON serialization with proper options
         let reader = ObjectReader::from_tokens(&filtered_tokens, Utf8Encoding::new());
-        reader
-            .json()
-            .with_options(options)
-            .to_writer(writer)
+        reader.json().with_options(options).to_writer(writer)
     }
 
     /// Generate JSON output using default options
     pub fn to_json(&self) -> String {
         let default_options = jomini_next::json::JsonOptions::new();
         let mut output = Vec::new();
-        self.to_writer_with_options(&mut output, default_options).unwrap();
+        self.to_writer_with_options(&mut output, default_options)
+            .unwrap();
         String::from_utf8(output).unwrap()
     }
 }
@@ -360,7 +358,10 @@ impl MaterializedTape {
     }
 
     /// Create filtered tokens that exclude variable declarations
-    pub fn create_filtered_tokens(&self, variable_declarations: &std::collections::HashSet<String>) -> Vec<TextToken<'_>> {
+    pub fn create_filtered_tokens(
+        &self,
+        variable_declarations: &std::collections::HashSet<String>,
+    ) -> Vec<TextToken<'_>> {
         let original_tokens = self.create_tokens();
         TokenFilter::filter_tokens_static(&original_tokens, variable_declarations)
     }
@@ -371,7 +372,10 @@ struct TokenFilter;
 
 impl TokenFilter {
     /// Filter tokens to remove variable declarations while maintaining token stream integrity
-    fn filter_tokens_static<'a>(tokens: &[TextToken<'a>], variable_declarations: &std::collections::HashSet<String>) -> Vec<TextToken<'a>> {
+    fn filter_tokens_static<'a>(
+        tokens: &[TextToken<'a>],
+        variable_declarations: &std::collections::HashSet<String>,
+    ) -> Vec<TextToken<'a>> {
         let mut filtered_tokens = Vec::new();
         let mut index_mapping = std::collections::HashMap::new(); // original_index -> filtered_index
 
@@ -401,7 +405,11 @@ impl TokenFilter {
     }
 
     /// Check if we should skip a token sequence starting at the given index
-    fn should_skip_token_sequence(tokens: &[TextToken<'_>], start_index: usize, variable_declarations: &std::collections::HashSet<String>) -> SkipResult {
+    fn should_skip_token_sequence(
+        tokens: &[TextToken<'_>],
+        start_index: usize,
+        variable_declarations: &std::collections::HashSet<String>,
+    ) -> SkipResult {
         if let Some(TextToken::Unquoted(scalar)) = tokens.get(start_index) {
             let text = String::from_utf8_lossy(scalar.as_bytes());
 
@@ -441,21 +449,30 @@ impl TokenFilter {
     }
 
     /// Update token indices for containers to maintain token stream integrity
-    fn update_token_indices<'a>(token: &TextToken<'a>, index_mapping: &std::collections::HashMap<usize, usize>) -> TextToken<'a> {
+    fn update_token_indices<'a>(
+        token: &TextToken<'a>,
+        index_mapping: &std::collections::HashMap<usize, usize>,
+    ) -> TextToken<'a> {
         match token {
             TextToken::Object { end, mixed } => {
                 let new_end = index_mapping.get(end).copied().unwrap_or(*end);
-                TextToken::Object { end: new_end, mixed: *mixed }
+                TextToken::Object {
+                    end: new_end,
+                    mixed: *mixed,
+                }
             }
             TextToken::Array { end, mixed } => {
                 let new_end = index_mapping.get(end).copied().unwrap_or(*end);
-                TextToken::Array { end: new_end, mixed: *mixed }
+                TextToken::Array {
+                    end: new_end,
+                    mixed: *mixed,
+                }
             }
             TextToken::End(end) => {
                 let new_end = index_mapping.get(end).copied().unwrap_or(*end);
                 TextToken::End(new_end)
             }
-            _ => token.clone()
+            _ => token.clone(),
         }
     }
 }
@@ -920,7 +937,8 @@ test = @[var + 5]
     }
 
     #[test]
-    fn test_interpolation_with_duplicate_keys_key_value_pairs() -> Result<(), Box<dyn std::error::Error>> {
+    fn test_interpolation_with_duplicate_keys_key_value_pairs(
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let data = br#"
 @var = 10
 duplicate = @var
