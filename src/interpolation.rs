@@ -377,8 +377,8 @@ fn eval_expression(
     expr: &str,
     variables: &HashMap<String, f64>,
 ) -> Result<f64, Box<dyn std::error::Error>> {
-    // Simple expression evaluator for the test cases
-    // Handles: numbers, variables, +, -, *, /, parentheses
+    // Enhanced expression evaluator with proper parentheses and operator precedence
+    // Handles: numbers, variables, +, -, *, /, parentheses with proper precedence
     let expr = expr.trim();
 
     // Remove outer brackets if present
@@ -388,91 +388,103 @@ fn eval_expression(
         expr
     };
 
-    // Handle simple variable lookup
-    if let Some(&value) = variables.get(expr) {
-        return Ok(value);
+    eval_addition_subtraction(expr, variables)
+}
+
+fn eval_addition_subtraction(
+    expr: &str,
+    variables: &HashMap<String, f64>,
+) -> Result<f64, Box<dyn std::error::Error>> {
+    // Handle + and - operations (lowest precedence)
+    let expr = expr.trim();
+
+    // Find + or - operators that are not inside parentheses
+    let mut paren_depth = 0;
+    let chars: Vec<char> = expr.chars().collect();
+
+    for i in (0..chars.len()).rev() {
+        match chars[i] {
+            ')' => paren_depth += 1,
+            '(' => paren_depth -= 1,
+            '+' | '-' if paren_depth == 0 && i > 0 => {
+                let left_part = &expr[..i].trim();
+                let right_part = &expr[i + 1..].trim();
+                let left_val = eval_multiplication_division(left_part, variables)?;
+                let right_val = eval_multiplication_division(right_part, variables)?;
+
+                return Ok(if chars[i] == '+' {
+                    left_val + right_val
+                } else {
+                    left_val - right_val
+                });
+            }
+            _ => {}
+        }
     }
 
-    // Handle direct numbers
-    if let Ok(num) = expr.parse::<f64>() {
-        return Ok(num);
+    // Handle negative numbers at the start
+    if expr.starts_with('-') && !expr[1..].starts_with('(') {
+        let operand = &expr[1..];
+        return Ok(-eval_multiplication_division(operand, variables)?);
     }
 
-    // Handle complex expressions like (-half-half)*half FIRST
-    if let Some(star_pos) = expr.find('*') {
-        let left_part = &expr[..star_pos];
-        let right_part = &expr[star_pos + 1..];
+    eval_multiplication_division(expr, variables)
+}
 
-        let left_val = if left_part.starts_with('(') && left_part.ends_with(')') {
-            eval_expression(&left_part[1..left_part.len() - 1], variables)?
-        } else {
-            eval_expression(left_part, variables)?
-        };
+fn eval_multiplication_division(
+    expr: &str,
+    variables: &HashMap<String, f64>,
+) -> Result<f64, Box<dyn std::error::Error>> {
+    // Handle * and / operations (higher precedence)
+    let expr = expr.trim();
 
-        let right_val = eval_simple_operand(right_part, variables)?;
-        return Ok(left_val * right_val);
+    // Find * or / operators that are not inside parentheses
+    let mut paren_depth = 0;
+    let chars: Vec<char> = expr.chars().collect();
+
+    for i in (0..chars.len()).rev() {
+        match chars[i] {
+            ')' => paren_depth += 1,
+            '(' => paren_depth -= 1,
+            '*' | '/' if paren_depth == 0 => {
+                let left_part = &expr[..i].trim();
+                let right_part = &expr[i + 1..].trim();
+                let left_val = eval_factor(left_part, variables)?;
+                let right_val = eval_factor(right_part, variables)?;
+
+                return Ok(if chars[i] == '*' {
+                    left_val * right_val
+                } else {
+                    left_val / right_val
+                });
+            }
+            _ => {}
+        }
     }
 
-    // Handle parenthesized expressions with operations
+    eval_factor(expr, variables)
+}
+
+fn eval_factor(
+    expr: &str,
+    variables: &HashMap<String, f64>,
+) -> Result<f64, Box<dyn std::error::Error>> {
+    // Handle parentheses and basic operands (highest precedence)
+    let expr = expr.trim();
+
+    // Handle parenthesized expressions
     if expr.starts_with('(') && expr.ends_with(')') {
         let inner = &expr[1..expr.len() - 1];
-        return eval_expression(inner, variables);
+        return eval_addition_subtraction(inner, variables);
     }
 
-    // Handle basic arithmetic expressions
-    // This is a simplified evaluator for the test cases
-    if expr.contains('/') {
-        let parts: Vec<&str> = expr.split('/').collect();
-        if parts.len() == 2 {
-            let left = eval_simple_operand(parts[0].trim(), variables)?;
-            let right = eval_simple_operand(parts[1].trim(), variables)?;
-            return Ok(left / right);
-        }
+    // Handle negative expressions with parentheses
+    if expr.starts_with('-') && expr[1..].starts_with('(') && expr.ends_with(')') {
+        let inner = &expr[2..expr.len() - 1];
+        return Ok(-eval_addition_subtraction(inner, variables)?);
     }
 
-    if expr.contains('+') {
-        let parts: Vec<&str> = expr.split('+').collect();
-        if parts.len() == 2 {
-            let left = eval_simple_operand(parts[0].trim(), variables)?;
-            let right = eval_simple_operand(parts[1].trim(), variables)?;
-            return Ok(left + right);
-        }
-    }
-
-    if expr.contains('-') && !expr.starts_with('-') {
-        let parts: Vec<&str> = expr.split('-').collect();
-        if parts.len() == 2 {
-            let left = eval_simple_operand(parts[0].trim(), variables)?;
-            let right = eval_simple_operand(parts[1].trim(), variables)?;
-            return Ok(left - right);
-        }
-    }
-
-    // Handle negative numbers and expressions
-    if expr.starts_with('-') {
-        let inner = &expr[1..];
-        if inner.starts_with('(') && inner.ends_with(')') {
-            let inner_expr = &inner[1..inner.len() - 1];
-            return Ok(-eval_expression(inner_expr, variables)?);
-        }
-    }
-
-    // Handle subtraction with negative variables like -half-half
-    if expr.starts_with('-') && expr.contains('-') && expr.matches('-').count() > 1 {
-        // Find the second minus sign
-        let chars: Vec<char> = expr.chars().collect();
-        for i in 1..chars.len() {
-            if chars[i] == '-' {
-                let left_part = &expr[..i];
-                let right_part = &expr[i + 1..];
-                let left_val = eval_simple_operand(left_part, variables)?;
-                let right_val = eval_simple_operand(right_part, variables)?;
-                return Ok(left_val - right_val);
-            }
-        }
-    }
-
-    Err(format!("Unable to evaluate expression: {}", expr).into())
+    eval_simple_operand(expr, variables)
 }
 
 fn eval_simple_operand(
@@ -618,6 +630,24 @@ ratio = @factor"#;
 
         // Assert against complete JSON output
         let expected_json = r#"{"width":20,"height":10,"ratio":0.25}"#;
+        assert_eq!(json_output, expected_json);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_parentheses_interpolation() -> Result<(), Box<dyn std::error::Error>> {
+        let data = br#"
+@width = 768
+@cross_x = @[ ( 333 / width ) + 0.001 ]
+test_value = @cross_x
+"#;
+
+        let tape = TextTape::from_slice(data)?;
+        let interpolated_tape = InterpolatedTape::from_tape_with_interpolation(&tape)?;
+
+        let json_output = interpolated_tape.to_json();
+        let expected_json = r#"{"test_value":0.43459375}"#;
         assert_eq!(json_output, expected_json);
 
         Ok(())
