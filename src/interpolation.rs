@@ -214,7 +214,7 @@ impl<'a> InterpolatedTape<'a> {
     fn filter_object_json(&self, obj_reader: &ObjectReader<jomini_next::Utf8Encoding>) -> String {
         let mut json_parts = Vec::new();
 
-        for (key, _op, field_value) in obj_reader.fields() {
+        for (key, op, field_value) in obj_reader.fields() {
             let key_str = key.read_str();
 
             // Skip variable declarations at this level
@@ -227,7 +227,21 @@ impl<'a> InterpolatedTape<'a> {
 
             // Safely escape the key for JSON
             let escaped_key = key_str.replace('\\', "\\\\").replace('"', "\\\"");
-            let field_json = format!("\"{}\":{}", escaped_key, value_json);
+
+            // Handle comparison operators by creating structured objects
+            let field_json = match op {
+                Some(jomini_next::text::Operator::Equal) |
+                Some(jomini_next::text::Operator::Exact) |
+                Some(jomini_next::text::Operator::Exists) |
+                None => {
+                    // Equal, Exact, Exists operators or no operator (default assignment)
+                    format!("\"{}\":{}", escaped_key, value_json)
+                }
+                Some(operator) => {
+                    // Use the operator's name method to get the proper JSON field name
+                    format!("\"{}\":{{\"{}\":{}}}", escaped_key, operator.name(), value_json)
+                }
+            };
             json_parts.push(field_json);
         }
 
@@ -671,6 +685,32 @@ result3 = @test3
 
         let json_output = interpolated_tape.to_json();
         let expected_json = r#"{"result1":0.16666666666666666,"result2":1,"result3":1}"#;
+        assert_eq!(json_output, expected_json);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_comparison_operators() -> Result<(), Box<dyn std::error::Error>> {
+        let data = br#"
+@width = 768
+@height = 512
+test_gt > @[ width ]
+test_lt < @[ height ]
+test_gte >= @[ 700 ]
+test_lte <= @[ 500 ]
+test_ne != @[ 999 ]
+test_exact == @[ 42 ]
+test_exists ?= @[ 100 ]
+test_eq = @[ width ]
+"#;
+
+        let tape = TextTape::from_slice(data)?;
+
+        let interpolated_tape = InterpolatedTape::from_tape_with_interpolation(&tape)?;
+        let json_output = interpolated_tape.to_json();
+
+        let expected_json = r#"{"test_gt":{"GREATER_THAN":768},"test_lt":{"LESS_THAN":512},"test_gte":{"GREATER_THAN_EQUAL":700},"test_lte":{"LESS_THAN_EQUAL":500},"test_ne":{"NOT_EQUAL":999},"test_exact":42,"test_exists":100,"test_eq":768}"#;
         assert_eq!(json_output, expected_json);
 
         Ok(())
