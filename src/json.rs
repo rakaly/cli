@@ -14,9 +14,12 @@ use std::{
 };
 use vic3save::{file::Vic3ParsedText, Vic3File};
 
-use crate::tokens::{
-    ck3_tokens_resolver, eu4_tokens_resolver, hoi4_tokens_resolver, imperator_tokens_resolver,
-    vic3_tokens_resolver,
+use crate::{
+    interpolation::InterpolatedTape,
+    tokens::{
+        ck3_tokens_resolver, eu4_tokens_resolver, hoi4_tokens_resolver, imperator_tokens_resolver,
+        vic3_tokens_resolver,
+    },
 };
 
 /// convert save and game files to json
@@ -34,6 +37,10 @@ pub(crate) struct JsonCommand {
     /// pretty-print json
     #[argh(switch)]
     pretty: bool,
+
+    /// perform variable interpolation and convert exists operators to equals (requires --format)
+    #[argh(switch)]
+    interpolation: bool,
 
     /// file to melt. Omission reads from stdin
     #[argh(positional)]
@@ -64,6 +71,16 @@ fn parse_encoding(s: &str) -> anyhow::Result<Encoding> {
 
 impl JsonCommand {
     pub(crate) fn exec(&self) -> anyhow::Result<i32> {
+        // Validate that interpolation flag is only used with generic files (not game files)
+        if self.interpolation {
+            let extension = self.file.extension().and_then(|x| x.to_str());
+            if matches!(
+                extension,
+                Some("eu4") | Some("ck3") | Some("rome") | Some("hoi4") | Some("v3")
+            ) {
+                return Err(anyhow!("--interpolation flag can only be used with generic files (not game-specific file extensions), requires --format"));
+            }
+        }
         let extension = self.file.extension().and_then(|x| x.to_str());
         let data = std::fs::read(&self.file)?;
         let keys = parse_duplicate_keys(&self.duplicate_keys)?;
@@ -154,18 +171,44 @@ impl JsonCommand {
             }
             _ => {
                 let encoding = parse_encoding(&self.format)?;
-                let tape = TextTape::from_slice(&data)?;
-                match encoding {
-                    Encoding::Utf8 => tape
-                        .utf8_reader()
-                        .json()
-                        .with_options(options)
-                        .to_writer(writer),
-                    Encoding::Windows1252 => tape
-                        .windows1252_reader()
-                        .json()
-                        .with_options(options)
-                        .to_writer(writer),
+
+                if self.interpolation {
+                    // Parse directly with jomini_next for interpolation
+                    let tape = jomini_next::TextTape::from_slice(&data)?;
+
+                    // Use InterpolatedTape directly which handles interpolation and variable filtering
+                    let interpolated_tape = InterpolatedTape::from_tape_with_interpolation(&tape)
+                        .map_err(|e| anyhow::Error::msg(e.to_string()))?;
+
+                    // Convert jomini JsonOptions to jomini_next JsonOptions for pretty printing etc.
+                    let next_options = jomini_next::json::JsonOptions::new()
+                        .with_prettyprint(self.pretty)
+                        .with_duplicate_keys(match parse_duplicate_keys(&self.duplicate_keys)? {
+                            DuplicateKeyMode::Preserve => {
+                                jomini_next::json::DuplicateKeyMode::Preserve
+                            }
+                            DuplicateKeyMode::Group => jomini_next::json::DuplicateKeyMode::Group,
+                            DuplicateKeyMode::KeyValuePairs => {
+                                jomini_next::json::DuplicateKeyMode::KeyValuePairs
+                            }
+                        });
+
+                    // Use the InterpolatedTape's to_writer_with_options which includes variable filtering
+                    interpolated_tape.to_writer_with_options(writer, next_options)
+                } else {
+                    let tape = TextTape::from_slice(&data)?;
+                    match encoding {
+                        Encoding::Utf8 => tape
+                            .utf8_reader()
+                            .json()
+                            .with_options(options)
+                            .to_writer(writer),
+                        Encoding::Windows1252 => tape
+                            .windows1252_reader()
+                            .json()
+                            .with_options(options)
+                            .to_writer(writer),
+                    }
                 }
             }
         };
