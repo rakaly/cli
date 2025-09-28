@@ -20,51 +20,122 @@ impl<'a> InterpolatedTape<'a> {
         let mut skip_interpolation: HashSet<usize> = HashSet::new();
         let mut variable_declarations: HashSet<String> = HashSet::new();
 
-        // First pass: collect variable definitions
+        // Multiple passes to collect variable definitions (handle forward references)
         let tokens = tape.tokens();
-        let mut i = 0;
+        let mut unresolved_refs: Vec<(usize, String, String)> = Vec::new(); // (index, var_name, referenced_var)
 
-        while i < tokens.len() {
-            match &tokens[i] {
-                TextToken::Unquoted(scalar) => {
-                    let text = std::str::from_utf8(scalar.as_bytes())?;
+        // Keep iterating until no more variables can be resolved
+        let mut progress = true;
+        while progress {
+            progress = false;
+            let mut i = 0;
 
-                    // Variable definition: @var_name
-                    if text.starts_with('@') && !text.starts_with("@[") {
-                        let var_name = &text[1..];
+            while i < tokens.len() {
+                match &tokens[i] {
+                    TextToken::Unquoted(scalar) => {
+                        let text = std::str::from_utf8(scalar.as_bytes())?;
 
-                        // Look for the value (no = operator in tokens, it's consumed by parser)
-                        if i + 1 < tokens.len() {
-                            if let TextToken::Unquoted(value_scalar) = &tokens[i + 1] {
-                                let value_text = std::str::from_utf8(value_scalar.as_bytes())?;
+                        // Variable definition: @var_name
+                        if text.starts_with('@') && !text.starts_with("@[") {
+                            let var_name = &text[1..];
 
-                                // Handle @var = @[expression] format
-                                if value_text.starts_with("@[") && value_text.ends_with("]") {
-                                    let expr = &value_text[2..value_text.len() - 1];
-                                    let computed_value = eval_expression(expr, &variables)?;
-                                    variables.insert(var_name.to_string(), computed_value);
-                                    skip_interpolation.insert(i);
-                                    // Mark this as a variable declaration
-                                    variable_declarations.insert(format!("@{}", var_name));
-                                }
-                                // Handle @var = number format
-                                else if let Ok(value) = parse_f64(value_scalar.as_bytes()) {
-                                    variables.insert(var_name.to_string(), value);
-                                    skip_interpolation.insert(i);
-                                    // Mark this as a variable declaration
-                                    variable_declarations.insert(format!("@{}", var_name));
+                            // Skip if already processed
+                            if variables.contains_key(var_name) {
+                                i += 1;
+                                continue;
+                            }
+
+                            // Look for the value (no = operator in tokens, it's consumed by parser)
+                            if i + 1 < tokens.len() {
+                                if let TextToken::Unquoted(value_scalar) = &tokens[i + 1] {
+                                    let value_text = std::str::from_utf8(value_scalar.as_bytes())?;
+
+                                    // Handle @var = @[expression] format
+                                    if value_text.starts_with("@[") && value_text.ends_with("]") {
+                                        let expr = &value_text[2..value_text.len() - 1];
+                                        let computed_value = eval_expression(expr, &variables)?;
+                                        variables.insert(var_name.to_string(), computed_value);
+                                        skip_interpolation.insert(i);
+                                        // Mark this as a variable declaration
+                                        variable_declarations.insert(format!("@{}", var_name));
+                                        progress = true;
+                                    }
+                                    // Handle @var = @other_var format (direct variable reference)
+                                    else if value_text.starts_with("@")
+                                        && !value_text.starts_with("@[")
+                                    {
+                                        let referenced_var = &value_text[1..];
+                                        if let Some(&referenced_value) =
+                                            variables.get(referenced_var)
+                                        {
+                                            variables
+                                                .insert(var_name.to_string(), referenced_value);
+                                            skip_interpolation.insert(i);
+                                            // Mark this as a variable declaration
+                                            variable_declarations.insert(format!("@{}", var_name));
+                                            progress = true;
+                                        } else {
+                                            // Store for later resolution
+                                            unresolved_refs.push((
+                                                i,
+                                                var_name.to_string(),
+                                                referenced_var.to_string(),
+                                            ));
+                                        }
+                                    }
+                                    // Handle @var = number format
+                                    else if let Ok(value) = parse_f64(value_scalar.as_bytes()) {
+                                        variables.insert(var_name.to_string(), value);
+                                        skip_interpolation.insert(i);
+                                        // Mark this as a variable declaration
+                                        variable_declarations.insert(format!("@{}", var_name));
+                                        progress = true;
+                                    }
                                 }
                             }
                         }
                     }
+                    _ => {}
                 }
-                _ => {}
+                i += 1;
             }
-            i += 1;
+
+            // Try to resolve any unresolved references
+            let mut resolved_indices = Vec::new();
+            for (idx, (token_index, var_name, referenced_var)) in unresolved_refs.iter().enumerate()
+            {
+                if let Some(&referenced_value) = variables.get(referenced_var) {
+                    variables.insert(var_name.clone(), referenced_value);
+                    skip_interpolation.insert(*token_index);
+                    variable_declarations.insert(format!("@{}", var_name));
+                    resolved_indices.push(idx);
+                    progress = true;
+                }
+            }
+
+            // Remove resolved references from the unresolved list
+            for &idx in resolved_indices.iter().rev() {
+                unresolved_refs.remove(idx);
+            }
+        }
+
+        // Check for any remaining unresolved references
+        if !unresolved_refs.is_empty() {
+            let unresolved_names: Vec<String> = unresolved_refs
+                .iter()
+                .map(|(_, var_name, referenced_var)| {
+                    format!("@{} -> @{}", var_name, referenced_var)
+                })
+                .collect();
+            return Err(format!(
+                "Unresolved variable references: {}",
+                unresolved_names.join(", ")
+            )
+            .into());
         }
 
         // Second pass: find and store interpolations
-        i = 0;
+        let mut i = 0;
         while i < tokens.len() {
             match &tokens[i] {
                 TextToken::Unquoted(scalar) => {
@@ -230,16 +301,21 @@ impl<'a> InterpolatedTape<'a> {
 
             // Handle comparison operators by creating structured objects
             let field_json = match op {
-                Some(jomini_next::text::Operator::Equal) |
-                Some(jomini_next::text::Operator::Exact) |
-                Some(jomini_next::text::Operator::Exists) |
-                None => {
+                Some(jomini_next::text::Operator::Equal)
+                | Some(jomini_next::text::Operator::Exact)
+                | Some(jomini_next::text::Operator::Exists)
+                | None => {
                     // Equal, Exact, Exists operators or no operator (default assignment)
                     format!("\"{}\":{}", escaped_key, value_json)
                 }
                 Some(operator) => {
                     // Use the operator's name method to get the proper JSON field name
-                    format!("\"{}\":{{\"{}\":{}}}", escaped_key, operator.name(), value_json)
+                    format!(
+                        "\"{}\":{{\"{}\":{}}}",
+                        escaped_key,
+                        operator.name(),
+                        value_json
+                    )
                 }
             };
             json_parts.push(field_json);
@@ -712,6 +788,63 @@ test_eq = @[ width ]
 
         let expected_json = r#"{"test_gt":{"GREATER_THAN":768},"test_lt":{"LESS_THAN":512},"test_gte":{"GREATER_THAN_EQUAL":700},"test_lte":{"LESS_THAN_EQUAL":500},"test_ne":{"NOT_EQUAL":999},"test_exact":42,"test_exists":100,"test_eq":768}"#;
         assert_eq!(json_output, expected_json);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_direct_variable_reference() -> Result<(), Box<dyn std::error::Error>> {
+        let data = br#"
+@var_a = 0.7
+@var_b = @var_a
+test_obj = {
+    edge_color_mult = @var_b
+}
+"#;
+
+        let tape = TextTape::from_slice(data)?;
+        let interpolated_tape = InterpolatedTape::from_tape_with_interpolation(&tape)?;
+
+        let json_output = interpolated_tape.to_json();
+        let expected_json = r#"{"test_obj":{"edge_color_mult":0.7}}"#;
+        assert_eq!(json_output, expected_json);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_forward_variable_reference() -> Result<(), Box<dyn std::error::Error>> {
+        let data = br#"
+@derived_value = @base_value
+@base_value = 42
+result = @derived_value
+"#;
+
+        let tape = TextTape::from_slice(data)?;
+        let interpolated_tape = InterpolatedTape::from_tape_with_interpolation(&tape)?;
+
+        let json_output = interpolated_tape.to_json();
+        let expected_json = r#"{"result":42}"#;
+        assert_eq!(json_output, expected_json);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_unresolved_variable_reference_error() -> Result<(), Box<dyn std::error::Error>> {
+        // Test that unresolved references produce clear error messages
+        let data = br#"
+@missing_ref = @nonexistent_var
+test = @missing_ref
+"#;
+
+        let tape = TextTape::from_slice(data)?;
+        let result = InterpolatedTape::from_tape_with_interpolation(&tape);
+
+        assert!(result.is_err());
+        let error_msg = result.err().unwrap().to_string();
+        assert!(error_msg.contains("Unresolved variable references"));
+        assert!(error_msg.contains("@missing_ref -> @nonexistent_var"));
 
         Ok(())
     }
