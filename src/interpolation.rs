@@ -392,7 +392,16 @@ impl TokenFilter {
 
             // Map original index to filtered index
             index_mapping.insert(i, filtered_tokens.len());
-            filtered_tokens.push(tokens[i].clone()); // Clone first, update indices later
+
+            // Convert EXACT and EXISTS operators to regular assignment
+            let mut token = tokens[i].clone();
+            if let TextToken::Operator(op) = &token {
+                if matches!(op, jomini_next::text::Operator::Exact | jomini_next::text::Operator::Exists) {
+                    token = TextToken::Operator(jomini_next::text::Operator::Equal);
+                }
+            }
+
+            filtered_tokens.push(token);
             i += 1;
         }
 
