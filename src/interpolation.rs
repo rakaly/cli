@@ -396,9 +396,16 @@ fn eval_addition_subtraction(
     variables: &HashMap<String, f64>,
 ) -> Result<f64, Box<dyn std::error::Error>> {
     // Handle + and - operations (lowest precedence)
+    // For left-associativity with recursive descent, find the RIGHTMOST operator
     let expr = expr.trim();
 
-    // Find + or - operators that are not inside parentheses
+    // Handle negative numbers at the start (but only if there's no other minus after it)
+    if expr.starts_with('-') && !expr[1..].starts_with('(') && !expr[1..].contains('-') {
+        let operand = &expr[1..];
+        return Ok(-eval_multiplication_division(operand, variables)?);
+    }
+
+    // Find + or - operators that are not inside parentheses, scanning right to left
     let mut paren_depth = 0;
     let chars: Vec<char> = expr.chars().collect();
 
@@ -409,7 +416,7 @@ fn eval_addition_subtraction(
             '+' | '-' if paren_depth == 0 && i > 0 => {
                 let left_part = &expr[..i].trim();
                 let right_part = &expr[i + 1..].trim();
-                let left_val = eval_multiplication_division(left_part, variables)?;
+                let left_val = eval_addition_subtraction(left_part, variables)?;
                 let right_val = eval_multiplication_division(right_part, variables)?;
 
                 return Ok(if chars[i] == '+' {
@@ -422,12 +429,6 @@ fn eval_addition_subtraction(
         }
     }
 
-    // Handle negative numbers at the start
-    if expr.starts_with('-') && !expr[1..].starts_with('(') {
-        let operand = &expr[1..];
-        return Ok(-eval_multiplication_division(operand, variables)?);
-    }
-
     eval_multiplication_division(expr, variables)
 }
 
@@ -436,9 +437,10 @@ fn eval_multiplication_division(
     variables: &HashMap<String, f64>,
 ) -> Result<f64, Box<dyn std::error::Error>> {
     // Handle * and / operations (higher precedence)
+    // For left-associativity with recursive descent, find the RIGHTMOST operator
     let expr = expr.trim();
 
-    // Find * or / operators that are not inside parentheses
+    // Find * or / operators that are not inside parentheses, scanning right to left
     let mut paren_depth = 0;
     let chars: Vec<char> = expr.chars().collect();
 
@@ -446,10 +448,10 @@ fn eval_multiplication_division(
         match chars[i] {
             ')' => paren_depth += 1,
             '(' => paren_depth -= 1,
-            '*' | '/' if paren_depth == 0 => {
+            '*' | '/' if paren_depth == 0 && i > 0 => {
                 let left_part = &expr[..i].trim();
                 let right_part = &expr[i + 1..].trim();
-                let left_val = eval_factor(left_part, variables)?;
+                let left_val = eval_multiplication_division(left_part, variables)?;
                 let right_val = eval_factor(right_part, variables)?;
 
                 return Ok(if chars[i] == '*' {
@@ -648,6 +650,27 @@ test_value = @cross_x
 
         let json_output = interpolated_tape.to_json();
         let expected_json = r#"{"test_value":0.43459375}"#;
+        assert_eq!(json_output, expected_json);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_chained_divisions() -> Result<(), Box<dyn std::error::Error>> {
+        let data = br#"
+@test1 = @[1/3/2]
+@test2 = @[8/4/2]
+@test3 = @[12/3/2/2]
+result1 = @test1
+result2 = @test2
+result3 = @test3
+"#;
+
+        let tape = TextTape::from_slice(data)?;
+        let interpolated_tape = InterpolatedTape::from_tape_with_interpolation(&tape)?;
+
+        let json_output = interpolated_tape.to_json();
+        let expected_json = r#"{"result1":0.16666666666666666,"result2":1,"result3":1}"#;
         assert_eq!(json_output, expected_json);
 
         Ok(())
