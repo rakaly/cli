@@ -175,8 +175,6 @@ impl<'a> InterpolatedTape<'a> {
         })
     }
 
-    /// Get the token at the specified index, using interpolated value if available
-
     /// Materialize all tokens into a tape that owns its string data
     /// This allows using the full jomini API (JSON, readers, etc.)
     pub fn materialize(&self) -> MaterializedTape {
@@ -271,106 +269,30 @@ impl<'a> InterpolatedTape<'a> {
         }
     }
 
-    /// Generate JSON output using jomini's JSON serialization
-    pub fn to_json(&self) -> String {
-        let materialized = self.materialize();
-        let tokens = materialized.create_tokens();
-        let reader = ObjectReader::from_tokens(&tokens, Utf8Encoding::new());
-
-        // Recursively filter variable declarations starting from root object
-        self.filter_object_json(&reader)
-    }
-
-    /// Recursively filter variable declarations from an object
-    fn filter_object_json(&self, obj_reader: &ObjectReader<jomini_next::Utf8Encoding>) -> String {
-        let mut json_parts = Vec::new();
-
-        for (key, op, field_value) in obj_reader.fields() {
-            let key_str = key.read_str();
-
-            // Skip variable declarations at this level
-            if self.variable_declarations.contains(&*key_str) {
-                continue;
-            }
-
-            // Process the value - check if it's an object, array, or primitive
-            let value_json = self.filter_value_json(&field_value);
-
-            // Safely escape the key for JSON
-            let escaped_key = key_str.replace('\\', "\\\\").replace('"', "\\\"");
-
-            // Handle comparison operators by creating structured objects
-            let field_json = match op {
-                Some(jomini_next::text::Operator::Equal)
-                | Some(jomini_next::text::Operator::Exact)
-                | Some(jomini_next::text::Operator::Exists)
-                | None => {
-                    // Equal, Exact, Exists operators or no operator (default assignment)
-                    format!("\"{}\":{}", escaped_key, value_json)
-                }
-                Some(operator) => {
-                    // Use the operator's name method to get the proper JSON field name
-                    format!(
-                        "\"{}\":{{\"{}\":{}}}",
-                        escaped_key,
-                        operator.name(),
-                        value_json
-                    )
-                }
-            };
-            json_parts.push(field_json);
-        }
-
-        format!("{{{}}}", json_parts.join(","))
-    }
-
-    /// Process a field value, handling objects, arrays, and primitives
-    fn filter_value_json(
-        &self,
-        value: &jomini_next::text::ValueReader<jomini_next::Utf8Encoding>,
-    ) -> String {
-        // Use jomini's JSON conversion to determine the actual type
-        let json_str = value.json().to_string();
-
-        // If it starts with '[', it's an array
-        if json_str.starts_with('[') {
-            if let Ok(array_reader) = value.read_array() {
-                let mut json_parts = Vec::new();
-                for item in array_reader.values() {
-                    let item_json = self.filter_value_json(&item);
-                    json_parts.push(item_json);
-                }
-                return format!("[{}]", json_parts.join(","));
-            }
-        }
-
-        // If it starts with '{', it's an object
-        if json_str.starts_with('{') {
-            if let Ok(obj_reader) = value.read_object() {
-                return self.filter_object_json(&obj_reader);
-            }
-        }
-
-        // For primitive values, use jomini's JSON conversion
-        json_str
-    }
-
-    /// Generate pretty-printed JSON output
-
     /// Write JSON output with filtering directly to a writer with options
     pub fn to_writer_with_options<W: std::io::Write>(
         &self,
-        mut writer: W,
-        _options: jomini_next::json::JsonOptions,
+        writer: W,
+        options: jomini_next::json::JsonOptions,
     ) -> std::io::Result<()> {
-        // For now, use the filtered JSON string approach until we can properly implement
-        // token-level filtering that maintains structural integrity
-        // The variable filtering is the most important feature
-        let filtered_json = self.to_json();
+        // Create filtered tokens that exclude variable declarations
+        let materialized = self.materialize();
+        let filtered_tokens = materialized.create_filtered_tokens(&self.variable_declarations);
 
-        // TODO: Implement proper pretty printing and duplicate key handling
-        // This requires more sophisticated token manipulation to maintain parse tree structure
-        writer.write_all(filtered_json.as_bytes())
+        // Use jomini's built-in JSON serialization with proper options
+        let reader = ObjectReader::from_tokens(&filtered_tokens, Utf8Encoding::new());
+        reader
+            .json()
+            .with_options(options)
+            .to_writer(writer)
+    }
+
+    /// Generate JSON output using default options
+    pub fn to_json(&self) -> String {
+        let default_options = jomini_next::json::JsonOptions::new();
+        let mut output = Vec::new();
+        self.to_writer_with_options(&mut output, default_options).unwrap();
+        String::from_utf8(output).unwrap()
     }
 }
 
@@ -397,17 +319,6 @@ enum TokenType {
 }
 
 impl MaterializedTape {
-    /// Generate JSON output directly using jomini's JSON serialization
-    pub fn to_json_direct(&self) -> String {
-        use jomini_next::json::JsonOptions;
-        let tokens = self.create_tokens();
-        let reader = ObjectReader::from_tokens(&tokens, Utf8Encoding::new());
-        reader
-            .json()
-            .with_options(JsonOptions::default())
-            .to_string()
-    }
-
     /// Create tokens referencing our owned string data
     pub fn create_tokens(&self) -> Vec<TextToken<'_>> {
         let mut tokens = Vec::new();
@@ -447,6 +358,111 @@ impl MaterializedTape {
 
         tokens
     }
+
+    /// Create filtered tokens that exclude variable declarations
+    pub fn create_filtered_tokens(&self, variable_declarations: &std::collections::HashSet<String>) -> Vec<TextToken<'_>> {
+        let original_tokens = self.create_tokens();
+        TokenFilter::filter_tokens_static(&original_tokens, variable_declarations)
+    }
+}
+
+/// Token filter that maintains stream integrity while removing variable declarations
+struct TokenFilter;
+
+impl TokenFilter {
+    /// Filter tokens to remove variable declarations while maintaining token stream integrity
+    fn filter_tokens_static<'a>(tokens: &[TextToken<'a>], variable_declarations: &std::collections::HashSet<String>) -> Vec<TextToken<'a>> {
+        let mut filtered_tokens = Vec::new();
+        let mut index_mapping = std::collections::HashMap::new(); // original_index -> filtered_index
+
+        // First pass: collect all indices that should be kept
+        let mut i = 0;
+        while i < tokens.len() {
+            let should_skip = Self::should_skip_token_sequence(tokens, i, variable_declarations);
+
+            if should_skip.skip {
+                // Skip the entire sequence (key + operator + value)
+                i = should_skip.next_index;
+                continue;
+            }
+
+            // Map original index to filtered index
+            index_mapping.insert(i, filtered_tokens.len());
+            filtered_tokens.push(tokens[i].clone()); // Clone first, update indices later
+            i += 1;
+        }
+
+        // Second pass: update all token indices based on the mapping
+        for token in &mut filtered_tokens {
+            *token = Self::update_token_indices(token, &index_mapping);
+        }
+
+        filtered_tokens
+    }
+
+    /// Check if we should skip a token sequence starting at the given index
+    fn should_skip_token_sequence(tokens: &[TextToken<'_>], start_index: usize, variable_declarations: &std::collections::HashSet<String>) -> SkipResult {
+        if let Some(TextToken::Unquoted(scalar)) = tokens.get(start_index) {
+            let text = String::from_utf8_lossy(scalar.as_bytes());
+
+            if variable_declarations.contains(&*text) {
+                // This is a variable declaration - calculate how many tokens to skip
+                let mut skip_to = start_index + 1; // Skip the key
+
+                // Skip operator if present
+                if let Some(TextToken::Operator(_)) = tokens.get(skip_to) {
+                    skip_to += 1;
+                }
+
+                // Skip the value
+                if let Some(value_token) = tokens.get(skip_to) {
+                    skip_to += 1;
+
+                    // If the value is a container, skip to its end
+                    match value_token {
+                        TextToken::Object { end, .. } | TextToken::Array { end, .. } => {
+                            skip_to = *end + 1;
+                        }
+                        _ => {} // Simple value, already incremented
+                    }
+                }
+
+                return SkipResult {
+                    skip: true,
+                    next_index: skip_to,
+                };
+            }
+        }
+
+        SkipResult {
+            skip: false,
+            next_index: start_index + 1,
+        }
+    }
+
+    /// Update token indices for containers to maintain token stream integrity
+    fn update_token_indices<'a>(token: &TextToken<'a>, index_mapping: &std::collections::HashMap<usize, usize>) -> TextToken<'a> {
+        match token {
+            TextToken::Object { end, mixed } => {
+                let new_end = index_mapping.get(end).copied().unwrap_or(*end);
+                TextToken::Object { end: new_end, mixed: *mixed }
+            }
+            TextToken::Array { end, mixed } => {
+                let new_end = index_mapping.get(end).copied().unwrap_or(*end);
+                TextToken::Array { end: new_end, mixed: *mixed }
+            }
+            TextToken::End(end) => {
+                let new_end = index_mapping.get(end).copied().unwrap_or(*end);
+                TextToken::End(new_end)
+            }
+            _ => token.clone()
+        }
+    }
+}
+
+struct SkipResult {
+    skip: bool,
+    next_index: usize,
 }
 
 /// Format a numeric value as a string
@@ -845,6 +861,114 @@ test = @missing_ref
         let error_msg = result.err().unwrap().to_string();
         assert!(error_msg.contains("Unresolved variable references"));
         assert!(error_msg.contains("@missing_ref -> @nonexistent_var"));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_interpolation_with_duplicate_keys_preserve() -> Result<(), Box<dyn std::error::Error>> {
+        let data = br#"
+@var = 10
+duplicate = @var
+duplicate = @[var * 2]
+test = @[var + 5]
+"#;
+
+        let tape = TextTape::from_slice(data)?;
+        let interpolated_tape = InterpolatedTape::from_tape_with_interpolation(&tape)?;
+
+        // Test with preserve mode (default)
+        let options = jomini_next::json::JsonOptions::new()
+            .with_duplicate_keys(jomini_next::json::DuplicateKeyMode::Preserve);
+
+        let mut output = Vec::new();
+        interpolated_tape.to_writer_with_options(&mut output, options)?;
+        let json_output = String::from_utf8(output)?;
+
+        // Should preserve duplicate keys and filter out @var
+        let expected = r#"{"duplicate":10,"duplicate":20,"test":15}"#;
+        assert_eq!(json_output, expected);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_interpolation_with_duplicate_keys_group() -> Result<(), Box<dyn std::error::Error>> {
+        let data = br#"
+@var = 10
+duplicate = @var
+duplicate = @[var * 2]
+test = @[var + 5]
+"#;
+
+        let tape = TextTape::from_slice(data)?;
+        let interpolated_tape = InterpolatedTape::from_tape_with_interpolation(&tape)?;
+
+        // Test with group mode
+        let options = jomini_next::json::JsonOptions::new()
+            .with_duplicate_keys(jomini_next::json::DuplicateKeyMode::Group);
+
+        let mut output = Vec::new();
+        interpolated_tape.to_writer_with_options(&mut output, options)?;
+        let json_output = String::from_utf8(output)?;
+
+        // Should group duplicate keys and filter out @var
+        let expected = r#"{"duplicate":[10,20],"test":15}"#;
+        assert_eq!(json_output, expected);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_interpolation_with_duplicate_keys_key_value_pairs() -> Result<(), Box<dyn std::error::Error>> {
+        let data = br#"
+@var = 10
+duplicate = @var
+duplicate = @[var * 2]
+test = @[var + 5]
+"#;
+
+        let tape = TextTape::from_slice(data)?;
+        let interpolated_tape = InterpolatedTape::from_tape_with_interpolation(&tape)?;
+
+        // Test with key-value-pairs mode
+        let options = jomini_next::json::JsonOptions::new()
+            .with_duplicate_keys(jomini_next::json::DuplicateKeyMode::KeyValuePairs);
+
+        let mut output = Vec::new();
+        interpolated_tape.to_writer_with_options(&mut output, options)?;
+        let json_output = String::from_utf8(output)?;
+
+        // Should use key-value-pairs format and filter out @var
+        let expected = r#"{"type":"obj","val":[["duplicate",10],["duplicate",20],["test",15]]}"#;
+        assert_eq!(json_output, expected);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_interpolation_with_operators_and_grouping() -> Result<(), Box<dyn std::error::Error>> {
+        let data = br#"
+@threshold = 50
+condition > @threshold
+condition < @[threshold * 2]
+condition = @[threshold / 2]
+"#;
+
+        let tape = TextTape::from_slice(data)?;
+        let interpolated_tape = InterpolatedTape::from_tape_with_interpolation(&tape)?;
+
+        // Test with group mode and operators
+        let options = jomini_next::json::JsonOptions::new()
+            .with_duplicate_keys(jomini_next::json::DuplicateKeyMode::Group);
+
+        let mut output = Vec::new();
+        interpolated_tape.to_writer_with_options(&mut output, options)?;
+        let json_output = String::from_utf8(output)?;
+
+        // Should group conditions and handle operators, filter out @threshold
+        let expected = r#"{"condition":[{"GREATER_THAN":50},{"LESS_THAN":100},25]}"#;
+        assert_eq!(json_output, expected);
 
         Ok(())
     }
