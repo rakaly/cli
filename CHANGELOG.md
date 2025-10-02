@@ -1,3 +1,9 @@
+## v0.7.0 - 2025-10-02
+
+- (breaking change): JSON output update
+- Update to support Vic3 1.10 saves
+- Update to support CK3 1.17 saves
+
 ## v0.6.1 - 2025-06-20
 
 - Update to support Vic3 1.9 saves
