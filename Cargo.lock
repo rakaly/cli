@@ -206,7 +206,7 @@ checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
 [[package]]
 name = "ck3save"
 version = "0.4.3"
-source = "git+https://github.com/rakaly/ck3save.git#bd967deabe77d10c178ec461026b489fd524977e"
+source = "git+https://github.com/rakaly/ck3save.git#72145614bcb9a30cfdba0885a95507f1da97deb7"
 dependencies = [
  "flate2",
  "jomini",
@@ -330,7 +330,7 @@ dependencies = [
 [[package]]
 name = "eu4save"
 version = "0.8.2"
-source = "git+https://github.com/rakaly/eu4save.git#3a3f74c6e8a9a794d8e846f2ef104137fa5ccdac"
+source = "git+https://github.com/rakaly/eu4save.git#88de44765daffb82efd8e6bf90a1309ab5eaa44b"
 dependencies = [
  "flate2",
  "jomini",
@@ -440,8 +440,8 @@ checksum = "d231dfb89cfffdbc30e7fc41579ed6066ad03abda9e567ccafae602b97ec5024"
 
 [[package]]
 name = "hoi4save"
-version = "0.3.4"
-source = "git+https://github.com/rakaly/hoi4save.git#df3f11e840597dd6761f38c41f500aee8ee55a7a"
+version = "0.4.0"
+source = "git+https://github.com/rakaly/hoi4save.git#22baaf641c55eeb04441d4852f3186a94e1a635d"
 dependencies = [
  "jomini",
  "serde",
@@ -601,7 +601,7 @@ dependencies = [
 [[package]]
 name = "imperator-save"
 version = "0.4.2"
-source = "git+https://github.com/rakaly/imperator-save.git#d5aeb69b80c21af2db2a65c0db400c81ceb0f4bc"
+source = "git+https://github.com/rakaly/imperator-save.git#af384d040a16d3e880447627a888354770fd3ba1"
 dependencies = [
  "flate2",
  "jomini",
@@ -668,9 +668,9 @@ dependencies = [
 
 [[package]]
 name = "jomini"
-version = "0.28.0"
+version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85f314ee2027b37925dae74743e4127c84cdd5d96775e6b32f6686d126b4ebf7"
+checksum = "90fe8c2789c4132f5741a6f691fefeeb40806a23ff346dc2a20ed5353220be8e"
 dependencies = [
  "itoa",
  "jomini_derive",
@@ -680,9 +680,9 @@ dependencies = [
 
 [[package]]
 name = "jomini_derive"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ada358784500edb84f3e48b8d3758b4d1e9fe23f53b1d8d7b235bf1e6532021a"
+checksum = "cd938051b9bfd53ab3b61e237e12db15fec42c3d6d25e9c82c67e58277775dcf"
 dependencies = [
  "quote",
  "syn",
@@ -1094,9 +1094,9 @@ checksum = "60a357793950651c4ed0f3f52338f53b2f809f32d83a07f72909fa13e4c6c1e3"
 
 [[package]]
 name = "rawzip"
-version = "0.3.1"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15175d688c45677b5c1973398e0682a3efd381d3c7c0ccce86791d998986fac7"
+checksum = "70171b805bd97a69690df1b634104649ad193430aa60d8305dfb9b470fe690a8"
 
 [[package]]
 name = "redox_syscall"
@@ -1387,7 +1387,7 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 [[package]]
 name = "vic3save"
 version = "0.1.0"
-source = "git+https://github.com/pdx-tools/pdx-tools#5ed0e2b82ff77ca7449a476dfefc047a87e49554"
+source = "git+https://github.com/pdx-tools/pdx-tools#72f0965ef3172c67c7d0dd2ca5f3a4c6d0840570"
 dependencies = [
  "flate2",
  "getrandom 0.2.15",

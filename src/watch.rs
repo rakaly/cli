@@ -508,6 +508,7 @@ impl WatchCommand {
                         deser.deserialize::<hoi4save::models::Hoi4Save>()?
                     }
                     Hoi4FsFileKind::Binary(hoi4_binary) => hoi4_binary
+                        .as_ref()
                         .deserializer(hoi4_tokens_resolver())
                         .deserialize::<hoi4save::models::Hoi4Save>()?,
                 };
