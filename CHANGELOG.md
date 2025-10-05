@@ -1,3 +1,7 @@
+## v0.7.1 - 2025-10-05
+
+- Update to support Vic3 1.10.4 saves
+
 ## v0.7.0 - 2025-10-02
 
 - (breaking change): JSON output update
