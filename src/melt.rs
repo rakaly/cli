@@ -13,8 +13,8 @@ use std::{
 };
 
 use crate::tokens::{
-    ck3_tokens_resolver, eu4_tokens_resolver, hoi4_tokens_resolver, imperator_tokens_resolver,
-    vic3_tokens_resolver,
+    ck3_tokens_resolver, eu4_tokens_resolver, eu5_tokens_resolver, hoi4_tokens_resolver,
+    imperator_tokens_resolver, vic3_tokens_resolver,
 };
 
 /// Melt a binary encoded file into the plaintext equivalent.
@@ -29,7 +29,7 @@ pub(crate) struct MeltCommand {
     #[argh(option, short = 'u', default = "String::from(\"error\")")]
     unknown_key: String,
 
-    /// specify the format of the input: eu4 | ck3 | hoi4 | rome | vic3
+    /// specify the format of the input: eu4 | eu5 | ck3 | hoi4 | rome | vic3
     #[argh(option)]
     format: Option<String>,
 
@@ -57,6 +57,7 @@ fn parse_failed_resolve(s: &str) -> anyhow::Result<FailedResolveStrategy> {
 
 enum MeltedDocument {
     Eu4(eu4save::MeltedDocument),
+    Eu5(eu5save::MeltedDocument),
     Imperator(imperator_save::MeltedDocument),
     Hoi4(hoi4save::MeltedDocument),
     Ck3(ck3save::MeltedDocument),
@@ -67,6 +68,7 @@ impl MeltedDocument {
     pub fn unknown_tokens(&self) -> &HashSet<u16> {
         match self {
             MeltedDocument::Eu4(x) => x.unknown_tokens(),
+            MeltedDocument::Eu5(x) => x.unknown_tokens(),
             MeltedDocument::Imperator(x) => x.unknown_tokens(),
             MeltedDocument::Hoi4(x) => x.unknown_tokens(),
             MeltedDocument::Ck3(x) => x.unknown_tokens(),
@@ -87,6 +89,7 @@ struct Melter {
 
 enum MelterKind {
     Eu4,
+    Eu5,
     Ck3,
     Imperator,
     Vic3,
@@ -99,11 +102,12 @@ impl FromStr for MelterKind {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "eu4" => Ok(MelterKind::Eu4),
+            "eu5" => Ok(MelterKind::Eu5),
             "ck3" => Ok(MelterKind::Ck3),
             "rome" => Ok(MelterKind::Imperator),
             "hoi4" => Ok(MelterKind::Hoi4),
             "v3" => Ok(MelterKind::Vic3),
-            _ => bail!("Only eu4, ck3, vic3, hoi4, and imperator files supported"),
+            _ => bail!("Only eu4, eu5, ck3, vic3, hoi4, and imperator files supported"),
         }
     }
 }
@@ -118,6 +122,14 @@ impl Melter {
                     .verbatim(self.options.retain);
                 let out = file.melt(options, eu4_tokens_resolver(), writer)?;
                 Ok(MeltedDocument::Eu4(out))
+            }
+            MelterKind::Eu5 => {
+                let file = eu5save::Eu5File::from_slice(data)?;
+                let options = eu5save::MeltOptions::new()
+                    .on_failed_resolve(self.options.resolve)
+                    .verbatim(self.options.retain);
+                let out = file.melt(options, eu5_tokens_resolver(), writer)?;
+                Ok(MeltedDocument::Eu5(out))
             }
             MelterKind::Ck3 => {
                 let file = ck3save::Ck3File::from_slice(data)?;

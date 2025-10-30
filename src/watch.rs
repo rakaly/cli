@@ -2,6 +2,7 @@ use anyhow::{anyhow, bail, Context};
 use argh::FromArgs;
 use ck3save::PdsDate;
 use eu4save::file::{Eu4FileEntryName, Eu4FsFileKind};
+use eu5save::Eu5Date;
 use hoi4save::file::Hoi4FsFileKind;
 use imperator_save::file::ImperatorFsFileKind;
 use jomini::TextDeserializer;
@@ -22,15 +23,15 @@ use std::{
 use vic3save::file::Vic3FsFileKind;
 
 use crate::tokens::{
-    ck3_tokens_resolver, eu4_tokens_resolver, hoi4_tokens_resolver, imperator_tokens_resolver,
-    vic3_tokens_resolver,
+    ck3_tokens_resolver, eu4_tokens_resolver, eu5_tokens_resolver, hoi4_tokens_resolver,
+    imperator_tokens_resolver, vic3_tokens_resolver,
 };
 
 /// Watch a save file for changes and create a copy with the save's date when changed
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "watch")]
 pub(crate) struct WatchCommand {
-    /// specify the format of the input: eu4 | ck3 | hoi4 | rome | vic3
+    /// specify the format of the input: eu4 | eu5 | ck3 | hoi4 | rome | vic3
     /// if not specified, will be inferred from file extension
     #[argh(option)]
     format: Option<String>,
@@ -89,6 +90,7 @@ impl FromStr for SnapshotFrequency {
 #[derive(Debug, PartialEq)]
 enum GameType {
     Eu4,
+    Eu5,
     Ck3,
     Imperator,
     Vic3,
@@ -101,12 +103,13 @@ impl FromStr for GameType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "eu4" => Ok(GameType::Eu4),
+            "eu5" => Ok(GameType::Eu5),
             "ck3" => Ok(GameType::Ck3),
             "rome" => Ok(GameType::Imperator),
             "hoi4" => Ok(GameType::Hoi4),
             "v3" => Ok(GameType::Vic3),
             _ => Err(anyhow!(
-                "Only eu4, ck3, vic3, hoi4, and imperator files supported"
+                "Only eu4, eu5, ck3, vic3, hoi4, and imperator files supported"
             )),
         }
     }
@@ -116,6 +119,7 @@ impl GameType {
     fn default_frequency(&self) -> SnapshotFrequency {
         match self {
             GameType::Eu4 => SnapshotFrequency::Yearly,
+            GameType::Eu5 => SnapshotFrequency::Yearly,
             GameType::Ck3 => SnapshotFrequency::Yearly,
             GameType::Imperator => SnapshotFrequency::Yearly,
             GameType::Vic3 => SnapshotFrequency::Quarterly,
@@ -407,6 +411,33 @@ impl WatchCommand {
                 };
 
                 (meta.date.year(), meta.date.month(), meta.date.day())
+            }
+            GameType::Eu5 => {
+                #[derive(Debug, Deserialize)]
+                pub struct ZipPrelude {
+                    pub metadata: Metadata,
+                }
+
+                #[derive(Debug, Deserialize)]
+                pub struct Metadata {
+                    pub date: Eu5Date,
+                }
+
+                let file =
+                    eu5save::Eu5File::from_file(file).context("Failed to parse EU5 save file")?;
+
+                let prelude = match file.meta() {
+                    eu5save::SaveBodyKind::Text(mut txt) => {
+                        ZipPrelude::deserialize(&mut txt.deserializer())
+                    }
+                    eu5save::SaveBodyKind::Binary(mut bin) => {
+                        ZipPrelude::deserialize(&mut bin.deserializer(&eu5_tokens_resolver()))
+                    }
+                }
+                .context("Failed to parse EU5 metadata")?;
+
+                let date = prelude.metadata.date;
+                (date.year(), date.month(), date.day())
             }
             GameType::Ck3 => {
                 let mut file =

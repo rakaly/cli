@@ -12,6 +12,7 @@ imperator-save = { git = "https://github.com/rakaly/imperator-save.git", default
 ck3save = { git = "https://github.com/rakaly/ck3save.git", default-features = false }
 hoi4save = { git = "https://github.com/rakaly/hoi4save.git" }
 vic3save = { git = "https://github.com/pdx-tools/pdx-tools"  }
+eu5save = { git = "https://github.com/pdx-tools/pdx-tools" }
 anyhow = "1"
 argh = "0.1"
 ctrlc = "3.4"
@@ -20,7 +21,6 @@ log = "0.4"
 memmap2 = "0.9.5"
 notify = "8.0.0"
 serde = { version = "1.0.219", features = ["derive"] }
-
 
 [dev-dependencies]
 assert_cmd = "2"

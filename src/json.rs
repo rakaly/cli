@@ -2,6 +2,7 @@ use anyhow::anyhow;
 use argh::FromArgs;
 use ck3save::{file::Ck3ParsedText, Ck3File};
 use eu4save::{file::Eu4ParsedText, Eu4File};
+use eu5save::Eu5File;
 use hoi4save::{file::Hoi4ParsedText, Hoi4File};
 use imperator_save::{file::ImperatorParsedText, ImperatorFile};
 use jomini::{
@@ -15,8 +16,8 @@ use std::{
 use vic3save::{file::Vic3ParsedText, Vic3File};
 
 use crate::tokens::{
-    ck3_tokens_resolver, eu4_tokens_resolver, hoi4_tokens_resolver, imperator_tokens_resolver,
-    vic3_tokens_resolver,
+    ck3_tokens_resolver, eu4_tokens_resolver, eu5_tokens_resolver, hoi4_tokens_resolver,
+    imperator_tokens_resolver, vic3_tokens_resolver,
 };
 
 /// convert save and game files to json
@@ -91,6 +92,32 @@ impl JsonCommand {
                 };
 
                 text.reader().json().with_options(options).to_writer(writer)
+            }
+            Some("eu5") => {
+                let file = Eu5File::from_slice(&data)?;
+                let mut out = Cursor::new(Vec::new());
+                let melted = if file.header().kind().is_binary() {
+                    let options = eu5save::MeltOptions::new()
+                        .on_failed_resolve(strategy)
+                        .verbatim(verbatim);
+                    file.melt(options, eu5_tokens_resolver(), &mut out)?;
+                    true
+                } else {
+                    false
+                };
+
+                let tape_data = if melted {
+                    out.get_ref().as_slice()
+                } else {
+                    // For text files, we need to skip the header
+                    &data[file.header().header_len()..]
+                };
+
+                let tape = TextTape::from_slice(tape_data)?;
+                tape.utf8_reader()
+                    .json()
+                    .with_options(options)
+                    .to_writer(writer)
             }
             Some("ck3") => {
                 let file = Ck3File::from_slice(&data)?;
