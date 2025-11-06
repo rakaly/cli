@@ -426,11 +426,11 @@ impl WatchCommand {
                 let file =
                     eu5save::Eu5File::from_file(file).context("Failed to parse EU5 save file")?;
 
-                let prelude = match file.meta() {
-                    eu5save::SaveBodyKind::Text(mut txt) => {
+                let prelude: ZipPrelude = match file.meta() {
+                    eu5save::Eu5MetaKind::Text(mut txt) => {
                         ZipPrelude::deserialize(&mut txt.deserializer())
                     }
-                    eu5save::SaveBodyKind::Binary(mut bin) => {
+                    eu5save::Eu5MetaKind::Binary(mut bin) => {
                         ZipPrelude::deserialize(&mut bin.deserializer(&eu5_tokens_resolver()))
                     }
                 }

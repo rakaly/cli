@@ -179,7 +179,7 @@ checksum = "46c5e41b57b8bba42a04676d81cb89e9ee8e859a1a66f80a5a72e1cb76b34d43"
 [[package]]
 name = "bumpalo-serde"
 version = "0.1.0"
-source = "git+https://github.com/pdx-tools/pdx-tools#0cbdd9168b6e910bcdb43a91565bf07a96bb5ea2"
+source = "git+https://github.com/pdx-tools/pdx-tools#213a0473be71fd35ca2a1c281ab5c6954fef2322"
 dependencies = [
  "bumpalo",
  "bumpalo-serde-derive",
@@ -189,7 +189,7 @@ dependencies = [
 [[package]]
 name = "bumpalo-serde-derive"
 version = "0.1.0"
-source = "git+https://github.com/pdx-tools/pdx-tools#0cbdd9168b6e910bcdb43a91565bf07a96bb5ea2"
+source = "git+https://github.com/pdx-tools/pdx-tools#213a0473be71fd35ca2a1c281ab5c6954fef2322"
 dependencies = [
  "bumpalo",
  "quote",
@@ -363,7 +363,7 @@ dependencies = [
 [[package]]
 name = "eu5save"
 version = "0.1.0"
-source = "git+https://github.com/pdx-tools/pdx-tools#0cbdd9168b6e910bcdb43a91565bf07a96bb5ea2"
+source = "git+https://github.com/pdx-tools/pdx-tools#213a0473be71fd35ca2a1c281ab5c6954fef2322"
 dependencies = [
  "bumpalo",
  "bumpalo-serde",
@@ -1423,7 +1423,7 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 [[package]]
 name = "vic3save"
 version = "0.1.0"
-source = "git+https://github.com/pdx-tools/pdx-tools#72f0965ef3172c67c7d0dd2ca5f3a4c6d0840570"
+source = "git+https://github.com/pdx-tools/pdx-tools#213a0473be71fd35ca2a1c281ab5c6954fef2322"
 dependencies = [
  "flate2",
  "getrandom 0.2.15",
