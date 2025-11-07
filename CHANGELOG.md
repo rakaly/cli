@@ -1,3 +1,7 @@
+## v0.8.1 - 2025-11-07
+
+- Strip ironman flag on melted eu5 saves to avoid reverting to ironman 
+
 ## v0.8.0 - 2025-11-05
 
 - Add EU5 support
