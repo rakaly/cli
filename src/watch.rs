@@ -172,6 +172,17 @@ impl Display for GameDate {
 
 struct SaveInfo {
     date: GameDate,
+    playthrough_name: Option<String>,
+}
+
+/// Sanitize a filename by replacing invalid characters with dashes
+fn sanitize_filename(name: &str) -> String {
+    name.chars()
+        .map(|c| match c {
+            '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|' => '-',
+            _ => c,
+        })
+        .collect()
 }
 
 impl WatchCommand {
@@ -226,14 +237,30 @@ impl WatchCommand {
         // Start watching the parent directory for changes
         watcher.watch(parent_dir.as_ref(), RecursiveMode::NonRecursive)?;
 
-        // Default output directory is subdirectory with the file stem name in the parent directory
+        // Try to get the playthrough_name to use as the default output directory
+        let playthrough_name_for_dir = if let Ok(save_info) = self.process_file(&game_type) {
+            save_info
+                .playthrough_name
+                .map(|name| sanitize_filename(&name))
+        } else {
+            None
+        };
+
+        // Default output directory is subdirectory with the playthrough_name if available,
+        // otherwise with the file stem name in the parent directory
         let out_dir = match &self.out_dir {
             Some(dir) => dir.clone(),
             None => {
                 let parent = self.file.parent().unwrap_or_else(|| Path::new("."));
-                let filename = self.file.file_stem().unwrap_or_default();
+                let dir_name = playthrough_name_for_dir.as_deref().unwrap_or_else(|| {
+                    self.file
+                        .file_stem()
+                        .unwrap_or_default()
+                        .to_str()
+                        .unwrap_or("snapshots")
+                });
                 let mut path = parent.to_path_buf();
-                path.push(filename);
+                path.push(dir_name);
 
                 path
             }
@@ -251,7 +278,7 @@ impl WatchCommand {
         // Track the last snapshot date for each game
         // Look for existing snapshots in the output directory when starting
         let start = Instant::now();
-        let mut last_snapshot = self.find_latest_snapshot(&out_dir);
+        let mut last_snapshot = self.find_latest_snapshot(&out_dir, &playthrough_name_for_dir);
         if let Some(ref snapshot) = last_snapshot {
             let elapsed = start.elapsed();
             info!(
@@ -353,7 +380,11 @@ impl WatchCommand {
                 continue;
             }
 
-            let out_path = self.create_output_path(&save_info.date.to_string(), &out_dir);
+            let out_path = self.create_output_path(
+                &save_info.date.to_string(),
+                &out_dir,
+                &save_info.playthrough_name,
+            );
 
             // Create parent directory if it doesn't exist
             if let Some(parent) = out_path.parent() {
@@ -389,7 +420,7 @@ impl WatchCommand {
             .with_context(|| format!("Failed to open file: {}", self.file.display()))?;
 
         // Parse the save to extract date (and make sure it is valid)
-        let (year, month, day) = match game_type {
+        let (year, month, day, playthrough_name) = match game_type {
             GameType::Eu4 => {
                 let file =
                     eu4save::Eu4File::from_file(file).context("Failed to parse EU4 save file")?;
@@ -410,7 +441,7 @@ impl WatchCommand {
                     }
                 };
 
-                (meta.date.year(), meta.date.month(), meta.date.day())
+                (meta.date.year(), meta.date.month(), meta.date.day(), None)
             }
             GameType::Eu5 => {
                 #[derive(Debug, Deserialize)]
@@ -421,6 +452,7 @@ impl WatchCommand {
                 #[derive(Debug, Deserialize)]
                 pub struct Metadata {
                     pub date: Eu5Date,
+                    pub playthrough_name: String,
                 }
 
                 let file =
@@ -437,7 +469,12 @@ impl WatchCommand {
                 .context("Failed to parse EU5 metadata")?;
 
                 let date = prelude.metadata.date;
-                (date.year(), date.month(), date.day())
+                let name = if prelude.metadata.playthrough_name.is_empty() {
+                    None
+                } else {
+                    Some(prelude.metadata.playthrough_name)
+                };
+                (date.year(), date.month(), date.day(), name)
             }
             GameType::Ck3 => {
                 let mut file =
@@ -465,6 +502,7 @@ impl WatchCommand {
                     meta.meta_data.meta_date.year(),
                     meta.meta_data.meta_date.month(),
                     meta.meta_data.meta_date.day(),
+                    None,
                 )
             }
             GameType::Imperator => {
@@ -492,7 +530,7 @@ impl WatchCommand {
                         .deserialize::<ImperatorMeta>()?,
                 };
 
-                (meta.date.year(), meta.date.month(), meta.date.day())
+                (meta.date.year(), meta.date.month(), meta.date.day(), None)
             }
             GameType::Vic3 => {
                 let mut file = vic3save::Vic3File::from_file(file)
@@ -526,6 +564,7 @@ impl WatchCommand {
                     meta.meta_data.game_date.year(),
                     meta.meta_data.game_date.month(),
                     meta.meta_data.game_date.day(),
+                    None,
                 )
             }
             GameType::Hoi4 => {
@@ -544,13 +583,16 @@ impl WatchCommand {
                         .deserialize::<hoi4save::models::Hoi4Save>()?,
                 };
 
-                (meta.date.year(), meta.date.month(), meta.date.day())
+                (meta.date.year(), meta.date.month(), meta.date.day(), None)
             }
         };
 
         let game_date = GameDate { year, month, day };
 
-        Ok(SaveInfo { date: game_date })
+        Ok(SaveInfo {
+            date: game_date,
+            playthrough_name,
+        })
     }
 
     fn determine_game_type(&self) -> anyhow::Result<GameType> {
@@ -569,11 +611,21 @@ impl WatchCommand {
             .map_err(|_| anyhow!("Format of file unknown, please pass known format option"))
     }
 
-    fn create_output_path(&self, date: &str, out_dir: &Path) -> PathBuf {
-        let filename = self.file.file_stem().unwrap_or_default();
+    fn create_output_path(
+        &self,
+        date: &str,
+        out_dir: &Path,
+        playthrough_name: &Option<String>,
+    ) -> PathBuf {
         let extension = self.file.extension().unwrap_or_default();
 
-        let mut new_filename = filename.to_owned();
+        // Use the playthrough_name as the base filename if available, otherwise use file stem
+        let base_filename = playthrough_name
+            .as_ref()
+            .map(|name| sanitize_filename(name).into())
+            .unwrap_or_else(|| self.file.file_stem().unwrap_or_default().to_owned());
+
+        let mut new_filename = base_filename;
         new_filename.push("_");
         new_filename.push(date);
 
@@ -590,13 +642,20 @@ impl WatchCommand {
     fn find_snapshots(
         &self,
         out_dir: &Path,
+        playthrough_name: &Option<String>,
     ) -> anyhow::Result<impl Iterator<Item = (PathBuf, GameDate)> + use<'_>> {
-        let base_filename = self
-            .file
-            .file_stem()
-            .expect("to have a file stem")
-            .to_str()
-            .expect("to convert filename to string");
+        // Use the playthrough_name as the base filename if available, otherwise use file stem
+        let base_filename = playthrough_name
+            .as_ref()
+            .map(|name| sanitize_filename(name))
+            .unwrap_or_else(|| {
+                self.file
+                    .file_stem()
+                    .expect("to have a file stem")
+                    .to_str()
+                    .expect("to convert filename to string")
+                    .to_owned()
+            });
 
         let entries = fs::read_dir(out_dir)?;
         let entries = entries.filter_map(Result::ok).filter_map(move |entry| {
@@ -608,7 +667,7 @@ impl WatchCommand {
             let filename = path.file_stem()?.to_str()?;
 
             // Check if the filename starts with base_filename followed by underscore
-            if !filename.starts_with(base_filename)
+            if !filename.starts_with(&base_filename)
                 || !filename[base_filename.len()..].starts_with('_')
             {
                 return None;
@@ -628,8 +687,12 @@ impl WatchCommand {
         Ok(entries)
     }
 
-    fn find_latest_snapshot(&self, out_dir: &Path) -> Option<GameDate> {
-        self.find_snapshots(out_dir)
+    fn find_latest_snapshot(
+        &self,
+        out_dir: &Path,
+        playthrough_name: &Option<String>,
+    ) -> Option<GameDate> {
+        self.find_snapshots(out_dir, playthrough_name)
             .ok()?
             .map(|(_, date)| date)
             .max()

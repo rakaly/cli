@@ -28,6 +28,5 @@ pub fn hoi4_tokens_resolver() -> hoi4save::BasicTokenResolver {
 
 pub fn eu5_tokens_resolver() -> eu5save::BasicTokenResolver {
     let data = include_bytes!("../assets/tokens/eu5.txt");
-    eu5save::BasicTokenResolver::from_text_lines(&data[..])
-        .expect("embedded tokens invalid format")
+    eu5save::BasicTokenResolver::from_text_lines(&data[..]).expect("embedded tokens invalid format")
 }
