@@ -1,3 +1,8 @@
+## v0.8.2 - 2025-11-12
+
+- Add the `--interpolate` flag for variable interpolation on the json command
+- Organize watched EU5 saves by playthrough name instead of file name
+
 ## v0.8.1 - 2025-11-07
 
 - Strip ironman flag on melted eu5 saves to avoid reverting to ironman 
