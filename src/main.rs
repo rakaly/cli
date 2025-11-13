@@ -1,4 +1,5 @@
 mod cli;
+mod interpolation;
 mod json;
 mod melt;
 mod tokens;
