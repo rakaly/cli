@@ -1,6 +1,8 @@
 use anyhow::{anyhow, bail, Context};
 use argh::FromArgs;
-use ck3save::FailedResolveStrategy;
+use ck3save::{Ck3Melt, FailedResolveStrategy};
+use eu5save::Eu5Melt;
+use imperator_save::ImperatorMelt;
 use memmap2::MmapOptions;
 use std::{
     collections::HashSet,
@@ -11,6 +13,7 @@ use std::{
     str::FromStr,
     writeln,
 };
+use vic3save::Vic3Melt;
 
 use crate::tokens::{
     ck3_tokens_resolver, eu4_tokens_resolver, eu5_tokens_resolver, hoi4_tokens_resolver,
@@ -128,7 +131,7 @@ impl Melter {
                 let options = eu5save::MeltOptions::new()
                     .on_failed_resolve(self.options.resolve)
                     .verbatim(self.options.retain);
-                let out = file.melt(options, eu5_tokens_resolver(), writer)?;
+                let out = Eu5Melt::melt(&mut (&file), options, eu5_tokens_resolver(), writer)?;
                 Ok(MeltedDocument::Eu5(out))
             }
             MelterKind::Ck3 => {
@@ -136,7 +139,7 @@ impl Melter {
                 let options = ck3save::MeltOptions::new()
                     .on_failed_resolve(self.options.resolve)
                     .verbatim(self.options.retain);
-                let out = file.melt(options, ck3_tokens_resolver(), writer)?;
+                let out = Ck3Melt::melt(&mut (&file), options, ck3_tokens_resolver(), writer)?;
                 Ok(MeltedDocument::Ck3(out))
             }
             MelterKind::Imperator => {
@@ -144,7 +147,12 @@ impl Melter {
                 let options = imperator_save::MeltOptions::new()
                     .on_failed_resolve(self.options.resolve)
                     .verbatim(self.options.retain);
-                let out = file.melt(options, imperator_tokens_resolver(), writer)?;
+                let out = ImperatorMelt::melt(
+                    &mut (&file),
+                    options,
+                    imperator_tokens_resolver(),
+                    writer,
+                )?;
                 Ok(MeltedDocument::Imperator(out))
             }
             MelterKind::Vic3 => {
@@ -152,7 +160,7 @@ impl Melter {
                 let options = vic3save::MeltOptions::new()
                     .on_failed_resolve(self.options.resolve)
                     .verbatim(self.options.retain);
-                let out = file.melt(options, vic3_tokens_resolver(), writer)?;
+                let out = Vic3Melt::melt(&mut (&file), options, vic3_tokens_resolver(), writer)?;
                 Ok(MeltedDocument::Vic3(out))
             }
             MelterKind::Hoi4 => {

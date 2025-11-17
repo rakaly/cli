@@ -1,10 +1,10 @@
 use anyhow::{anyhow, bail, Context};
 use argh::FromArgs;
-use ck3save::PdsDate;
+use ck3save::{Ck3BinaryDeserialization, PdsDate};
 use eu4save::file::{Eu4FileEntryName, Eu4FsFileKind};
-use eu5save::Eu5Date;
+use eu5save::{Eu5BinaryDeserialization, Eu5Date};
 use hoi4save::file::Hoi4FsFileKind;
-use imperator_save::file::ImperatorFsFileKind;
+use imperator_save::ImperatorBinaryDeserialization;
 use jomini::TextDeserializer;
 use log::{debug, error, info, trace};
 use notify::{Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
@@ -20,7 +20,7 @@ use std::{
     },
     time::{Duration, Instant},
 };
-use vic3save::file::Vic3FsFileKind;
+use vic3save::Vic3BinaryDeserialization;
 
 use crate::tokens::{
     ck3_tokens_resolver, eu4_tokens_resolver, eu5_tokens_resolver, hoi4_tokens_resolver,
@@ -458,12 +458,13 @@ impl WatchCommand {
                 let file =
                     eu5save::Eu5File::from_file(file).context("Failed to parse EU5 save file")?;
 
-                let prelude: ZipPrelude = match file.meta() {
-                    eu5save::Eu5MetaKind::Text(mut txt) => {
-                        ZipPrelude::deserialize(&mut txt.deserializer())
+                let prelude: ZipPrelude = match file.meta()? {
+                    jomini::envelope::SaveMetadataKind::Text(mut txt) => {
+                        txt.deserializer().deserialize()
                     }
-                    eu5save::Eu5MetaKind::Binary(mut bin) => {
-                        ZipPrelude::deserialize(&mut bin.deserializer(&eu5_tokens_resolver()))
+                    jomini::envelope::SaveMetadataKind::Binary(mut bin) => {
+                        Eu5BinaryDeserialization::deserializer(&mut bin, &eu5_tokens_resolver())
+                            .deserialize()
                     }
                 }
                 .context("Failed to parse EU5 metadata")?;
@@ -477,26 +478,19 @@ impl WatchCommand {
                 (date.year(), date.month(), date.day(), name)
             }
             GameType::Ck3 => {
-                let mut file =
+                let file =
                     ck3save::Ck3File::from_file(file).context("Failed to parse CK3 save file")?;
 
-                let meta = match file.kind_mut() {
-                    ck3save::file::Ck3FsFileKind::Text(file) => {
-                        let reader = jomini::text::TokenReader::new(file);
-                        let mut deser = TextDeserializer::from_utf8_reader(reader);
-                        deser.deserialize::<ck3save::models::Header>()?
+                let meta: ck3save::models::Header = match file.meta()? {
+                    jomini::envelope::SaveMetadataKind::Text(mut txt) => {
+                        txt.deserializer().deserialize()
                     }
-                    ck3save::file::Ck3FsFileKind::Binary(ck3_binary) => ck3_binary
-                        .deserializer(ck3_tokens_resolver())
-                        .deserialize::<ck3save::models::Header>()?,
-                    ck3save::file::Ck3FsFileKind::Zip(ck3_zip) => {
-                        let mut entry =
-                            ck3_zip.meta().context("Failed to read metadata from zip")?;
-                        entry
-                            .deserializer(ck3_tokens_resolver())
-                            .deserialize::<ck3save::models::Header>()?
+                    jomini::envelope::SaveMetadataKind::Binary(mut bin) => {
+                        Ck3BinaryDeserialization::deserializer(&mut bin, &ck3_tokens_resolver())?
+                            .deserialize()
                     }
-                };
+                }
+                .context("Failed to parse CK3 metadata")?;
 
                 (
                     meta.meta_data.meta_date.year(),
@@ -506,7 +500,7 @@ impl WatchCommand {
                 )
             }
             GameType::Imperator => {
-                let mut file = imperator_save::ImperatorFile::from_file(file)
+                let file = imperator_save::ImperatorFile::from_file(file)
                     .context("Failed to parse Imperator Rome save file")?;
 
                 #[derive(Deserialize, Debug)]
@@ -514,26 +508,24 @@ impl WatchCommand {
                     date: imperator_save::ImperatorDate,
                 }
 
-                let meta = match file.kind_mut() {
-                    ImperatorFsFileKind::Text(file) => {
-                        let reader = jomini::text::TokenReader::new(file);
-                        let mut deser = TextDeserializer::from_utf8_reader(reader);
-                        deser.deserialize::<ImperatorMeta>()?
+                let meta: ImperatorMeta = match file.meta()? {
+                    jomini::envelope::SaveMetadataKind::Text(mut txt) => {
+                        txt.deserializer().deserialize()
                     }
-                    ImperatorFsFileKind::Binary(imperator_binary) => imperator_binary
-                        .deserializer(imperator_tokens_resolver())
-                        .deserialize::<ImperatorMeta>()?,
-                    ImperatorFsFileKind::Zip(imperator_zip) => imperator_zip
-                        .meta()
-                        .context("Failed to read metadata from zip")?
-                        .deserializer(imperator_tokens_resolver())
-                        .deserialize::<ImperatorMeta>()?,
-                };
+                    jomini::envelope::SaveMetadataKind::Binary(mut bin) => {
+                        ImperatorBinaryDeserialization::deserializer(
+                            &mut bin,
+                            &imperator_tokens_resolver(),
+                        )
+                        .deserialize()
+                    }
+                }
+                .context("Failed to parse Imperator metadata")?;
 
                 (meta.date.year(), meta.date.month(), meta.date.day(), None)
             }
             GameType::Vic3 => {
-                let mut file = vic3save::Vic3File::from_file(file)
+                let file = vic3save::Vic3File::from_file(file)
                     .context("Failed to parse Victoria 3 save file")?;
 
                 #[derive(Deserialize, Debug)]
@@ -541,24 +533,16 @@ impl WatchCommand {
                     meta_data: vic3save::savefile::MetaData,
                 }
 
-                let meta = match file.kind_mut() {
-                    Vic3FsFileKind::Text(file) => {
-                        let reader = jomini::text::TokenReader::new(file);
-                        let mut deser = TextDeserializer::from_utf8_reader(reader);
-                        deser.deserialize::<Vic3MetaData>()?
+                let meta: Vic3MetaData = match file.meta()? {
+                    jomini::envelope::SaveMetadataKind::Text(mut txt) => {
+                        txt.deserializer().deserialize()
                     }
-                    Vic3FsFileKind::Binary(vic3_binary) => vic3_binary
-                        .deserializer(vic3_tokens_resolver())
-                        .deserialize::<Vic3MetaData>()?,
-                    Vic3FsFileKind::Zip(vic3_zip) => {
-                        let mut entry = vic3_zip
-                            .meta()
-                            .context("Failed to read metadata from zip")?;
-                        entry
-                            .deserializer(vic3_tokens_resolver())
-                            .deserialize::<Vic3MetaData>()?
+                    jomini::envelope::SaveMetadataKind::Binary(mut bin) => {
+                        Vic3BinaryDeserialization::deserializer(&mut bin, &vic3_tokens_resolver())
+                            .deserialize()
                     }
-                };
+                }
+                .context("Failed to parse Vic3 metadata")?;
 
                 (
                     meta.meta_data.game_date.year(),
