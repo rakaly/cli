@@ -179,7 +179,7 @@ checksum = "46c5e41b57b8bba42a04676d81cb89e9ee8e859a1a66f80a5a72e1cb76b34d43"
 [[package]]
 name = "bumpalo-serde"
 version = "0.1.0"
-source = "git+https://github.com/pdx-tools/pdx-tools#f1f055dad0d4fb220fc3920b27ab63e9f6efb580"
+source = "git+https://github.com/pdx-tools/pdx-tools#d150c442345efac3454e5b8484958739a23f451b"
 dependencies = [
  "bumpalo",
  "bumpalo-serde-derive",
@@ -189,7 +189,7 @@ dependencies = [
 [[package]]
 name = "bumpalo-serde-derive"
 version = "0.1.0"
-source = "git+https://github.com/pdx-tools/pdx-tools#f1f055dad0d4fb220fc3920b27ab63e9f6efb580"
+source = "git+https://github.com/pdx-tools/pdx-tools#d150c442345efac3454e5b8484958739a23f451b"
 dependencies = [
  "bumpalo",
  "quote",
@@ -227,11 +227,9 @@ checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
 [[package]]
 name = "ck3save"
 version = "0.4.3"
-source = "git+https://github.com/rakaly/ck3save.git#72145614bcb9a30cfdba0885a95507f1da97deb7"
+source = "git+https://github.com/rakaly/ck3save.git#2af3e2e85e2f1d1a57ef4ec90471c09e173b5895"
 dependencies = [
- "flate2",
  "jomini",
- "rawzip",
  "serde",
  "thiserror",
 ]
@@ -351,7 +349,7 @@ dependencies = [
 [[package]]
 name = "eu4save"
 version = "0.8.2"
-source = "git+https://github.com/rakaly/eu4save.git#88de44765daffb82efd8e6bf90a1309ab5eaa44b"
+source = "git+https://github.com/rakaly/eu4save.git#cb763062ee709dbbe40e26a606b721401cb2f311"
 dependencies = [
  "flate2",
  "jomini",
@@ -363,13 +361,11 @@ dependencies = [
 [[package]]
 name = "eu5save"
 version = "0.1.0"
-source = "git+https://github.com/pdx-tools/pdx-tools#f1f055dad0d4fb220fc3920b27ab63e9f6efb580"
+source = "git+https://github.com/pdx-tools/pdx-tools#d150c442345efac3454e5b8484958739a23f451b"
 dependencies = [
  "bumpalo",
  "bumpalo-serde",
- "flate2",
  "jomini",
- "rawzip",
  "serde",
  "thiserror",
 ]
@@ -394,9 +390,9 @@ dependencies = [
 
 [[package]]
 name = "flate2"
-version = "1.1.0"
+version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "11faaf5a5236997af9848be0bef4db95824b1d534ebc64d0f0c6cf3e67bd38dc"
+checksum = "bfe33edd8e85a12a67454e37f8c75e730830d83e313556ab9ebf9ee7fbeb3bfb"
 dependencies = [
  "crc32fast",
  "libz-rs-sys",
@@ -476,7 +472,7 @@ checksum = "d231dfb89cfffdbc30e7fc41579ed6066ad03abda9e567ccafae602b97ec5024"
 [[package]]
 name = "hoi4save"
 version = "0.4.0"
-source = "git+https://github.com/rakaly/hoi4save.git#22baaf641c55eeb04441d4852f3186a94e1a635d"
+source = "git+https://github.com/rakaly/hoi4save.git#ae0334d9b8cd5969e17016648e5e7a25be3a1c33"
 dependencies = [
  "jomini",
  "serde",
@@ -636,11 +632,9 @@ dependencies = [
 [[package]]
 name = "imperator-save"
 version = "0.4.2"
-source = "git+https://github.com/rakaly/imperator-save.git#af384d040a16d3e880447627a888354770fd3ba1"
+source = "git+https://github.com/rakaly/imperator-save.git#73ab8500ab236da1bf869a4fdc2dc52b0ba4ace9"
 dependencies = [
- "flate2",
  "jomini",
- "rawzip",
  "serde",
  "thiserror",
 ]
@@ -703,12 +697,14 @@ dependencies = [
 
 [[package]]
 name = "jomini"
-version = "0.29.0"
+version = "0.30.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90fe8c2789c4132f5741a6f691fefeeb40806a23ff346dc2a20ed5353220be8e"
+checksum = "debb135aec9b2908825711276118e0376f4dcbe764f956ee3ec66da7df66bfbd"
 dependencies = [
+ "flate2",
  "itoa",
  "jomini_derive",
+ "rawzip",
  "serde",
  "serde_json",
 ]
@@ -778,9 +774,9 @@ dependencies = [
 
 [[package]]
 name = "libz-rs-sys"
-version = "0.4.2"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "902bc563b5d65ad9bba616b490842ef0651066a1a1dc3ce1087113ffcb873c8d"
+checksum = "840db8cf39d9ec4dd794376f38acc40d0fc65eec2a8f484f7fd375b84602becd"
 dependencies = [
  "zlib-rs",
 ]
@@ -849,6 +845,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8e3e04debbb59698c15bacbb6d93584a8c0ca9cc3213cb423d31f760d8843ce5"
 dependencies = [
  "adler2",
+ "simd-adler32",
 ]
 
 [[package]]
@@ -1287,6 +1284,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
+name = "simd-adler32"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d66dc143e6b11c1eddc06d5c423cfc97062865baf299914ab64caa38182078fe"
+
+[[package]]
 name = "smallvec"
 version = "1.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1423,13 +1426,11 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 [[package]]
 name = "vic3save"
 version = "0.1.0"
-source = "git+https://github.com/pdx-tools/pdx-tools#f1f055dad0d4fb220fc3920b27ab63e9f6efb580"
+source = "git+https://github.com/pdx-tools/pdx-tools#d150c442345efac3454e5b8484958739a23f451b"
 dependencies = [
- "flate2",
  "getrandom 0.2.15",
  "jomini",
  "mathru",
- "rawzip",
  "serde",
  "serde_path_to_error",
  "thiserror",
@@ -1727,6 +1728,6 @@ dependencies = [
 
 [[package]]
 name = "zlib-rs"
-version = "0.4.2"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b20717f0917c908dc63de2e44e97f1e6b126ca58d0e391cee86d504eb8fbd05"
+checksum = "2f06ae92f42f5e5c42443fd094f245eb656abf56dd7cce9b8b263236565e00f2"
