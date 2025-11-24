@@ -6,6 +6,7 @@ use eu5save::Eu5Melt;
 use hoi4save::{file::Hoi4ParsedText, Hoi4File};
 use imperator_save::ImperatorMelt;
 use jomini::{
+    envelope::{JominiFileKind, SaveDataKind},
     json::{DuplicateKeyMode, JsonOptions},
     TextTape,
 };
@@ -111,6 +112,54 @@ impl JsonCommand {
 
                 text.reader().json().with_options(options).to_writer(writer)
             }
+            Some("eu5" | "ck3" | "rome" | "v3") => {
+                let file = jomini::envelope::JominiFile::from_slice(&data)?;
+                let mut out = Cursor::new(Vec::new());
+                match extension {
+                    Some("eu5") => {
+                        let options = eu5save::MeltOptions::new()
+                            .on_failed_resolve(strategy)
+                            .verbatim(verbatim);
+                        Eu5Melt::melt(&mut (&file), options, eu5_tokens_resolver(), &mut out)?;
+                    }
+                    Some("ck3") => {
+                        let options = ck3save::MeltOptions::new()
+                            .on_failed_resolve(strategy)
+                            .verbatim(verbatim);
+                        Ck3Melt::melt(&mut (&file), options, ck3_tokens_resolver(), &mut out)?;
+                    }
+                    Some("rome") => {
+                        let options = imperator_save::MeltOptions::new()
+                            .on_failed_resolve(strategy)
+                            .verbatim(verbatim);
+                        ImperatorMelt::melt(
+                            &mut (&file),
+                            options,
+                            imperator_tokens_resolver(),
+                            &mut out,
+                        )?;
+                    }
+                    Some("v3") => {
+                        let options = vic3save::MeltOptions::new()
+                            .on_failed_resolve(strategy)
+                            .verbatim(verbatim);
+                        Vic3Melt::melt(&mut (&file), options, vic3_tokens_resolver(), &mut out)?;
+                    }
+                    _ => unreachable!(),
+                }
+
+                let file = jomini::envelope::JominiFile::from_slice(out.get_ref())?;
+                let JominiFileKind::Uncompressed(SaveDataKind::Text(txt)) = file.kind() else {
+                    return Err(anyhow!("Unexpected file kind after melting"));
+                };
+
+                let data = txt.body().get_ref();
+                let tape = TextTape::from_slice(data.get_ref())?;
+                tape.utf8_reader()
+                    .json()
+                    .with_options(options)
+                    .to_writer(writer)
+            }
             Some("hoi4") => {
                 let file = Hoi4File::from_slice(&data)?;
                 let mut out = Cursor::new(Vec::new());
@@ -125,65 +174,6 @@ impl JsonCommand {
                 };
 
                 text.reader().json().with_options(options).to_writer(writer)
-            }
-            Some("eu5" | "ck3" | "rome" | "v3") => {
-                let file = jomini::envelope::JominiFile::from_slice(&data)?;
-                let mut out = Cursor::new(Vec::new());
-                let melted = if file.header().kind().is_binary() {
-                    match extension {
-                        Some("eu5") => {
-                            let options = eu5save::MeltOptions::new()
-                                .on_failed_resolve(strategy)
-                                .verbatim(verbatim);
-                            Eu5Melt::melt(&mut (&file), options, eu5_tokens_resolver(), &mut out)?;
-                        }
-                        Some("ck3") => {
-                            let options = ck3save::MeltOptions::new()
-                                .on_failed_resolve(strategy)
-                                .verbatim(verbatim);
-                            Ck3Melt::melt(&mut (&file), options, ck3_tokens_resolver(), &mut out)?;
-                        }
-                        Some("rome") => {
-                            let options = imperator_save::MeltOptions::new()
-                                .on_failed_resolve(strategy)
-                                .verbatim(verbatim);
-                            ImperatorMelt::melt(
-                                &mut (&file),
-                                options,
-                                imperator_tokens_resolver(),
-                                &mut out,
-                            )?;
-                        }
-                        Some("v3") => {
-                            let options = vic3save::MeltOptions::new()
-                                .on_failed_resolve(strategy)
-                                .verbatim(verbatim);
-                            Vic3Melt::melt(
-                                &mut (&file),
-                                options,
-                                vic3_tokens_resolver(),
-                                &mut out,
-                            )?;
-                        }
-                        _ => unreachable!(),
-                    };
-                    true
-                } else {
-                    false
-                };
-
-                let tape_data = if melted {
-                    out.get_ref().as_slice()
-                } else {
-                    // For text files, we need to skip the header
-                    &data[file.header().header_len()..]
-                };
-
-                let tape = TextTape::from_slice(tape_data)?;
-                tape.utf8_reader()
-                    .json()
-                    .with_options(options)
-                    .to_writer(writer)
             }
             _ => {
                 let encoding = parse_encoding(&self.format)?;
