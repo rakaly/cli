@@ -459,15 +459,13 @@ impl WatchCommand {
                     eu5save::Eu5File::from_file(file).context("Failed to parse EU5 save file")?;
 
                 let prelude: ZipPrelude = match file.meta()? {
-                    jomini::envelope::SaveMetadataKind::Text(mut txt) => {
-                        txt.deserializer().deserialize()
-                    }
-                    jomini::envelope::SaveMetadataKind::Binary(mut bin) => {
-                        Eu5BinaryDeserialization::deserializer(&mut bin, &eu5_tokens_resolver())
+                    eu5save::SaveMetadataKind::Text(mut x) => x.deserializer().deserialize(),
+                    eu5save::SaveMetadataKind::Binary(mut x) => {
+                        Eu5BinaryDeserialization::deserializer(&mut x, &eu5_tokens_resolver())
                             .deserialize()
                     }
                 }
-                .context("Failed to parse EU5 metadata")?;
+                .context("failed to deserialize EU5 metadata")?;
 
                 let date = prelude.metadata.date;
                 let name = if prelude.metadata.playthrough_name.is_empty() {
@@ -482,15 +480,13 @@ impl WatchCommand {
                     ck3save::Ck3File::from_file(file).context("Failed to parse CK3 save file")?;
 
                 let meta: ck3save::models::Header = match file.meta()? {
-                    jomini::envelope::SaveMetadataKind::Text(mut txt) => {
-                        txt.deserializer().deserialize()
-                    }
-                    jomini::envelope::SaveMetadataKind::Binary(mut bin) => {
-                        Ck3BinaryDeserialization::deserializer(&mut bin, &ck3_tokens_resolver())?
+                    ck3save::SaveMetadataKind::Text(mut x) => x.deserializer().deserialize(),
+                    ck3save::SaveMetadataKind::Binary(mut x) => {
+                        Ck3BinaryDeserialization::deserializer(&mut x, &ck3_tokens_resolver())?
                             .deserialize()
                     }
                 }
-                .context("Failed to parse CK3 metadata")?;
+                .context("failed to deserialize CK3 metadata")?;
 
                 (
                     meta.meta_data.meta_date.year(),
@@ -509,18 +505,16 @@ impl WatchCommand {
                 }
 
                 let meta: ImperatorMeta = match file.meta()? {
-                    jomini::envelope::SaveMetadataKind::Text(mut txt) => {
-                        txt.deserializer().deserialize()
-                    }
-                    jomini::envelope::SaveMetadataKind::Binary(mut bin) => {
+                    imperator_save::SaveMetadataKind::Text(mut x) => x.deserializer().deserialize(),
+                    imperator_save::SaveMetadataKind::Binary(mut x) => {
                         ImperatorBinaryDeserialization::deserializer(
-                            &mut bin,
+                            &mut x,
                             &imperator_tokens_resolver(),
                         )
                         .deserialize()
                     }
                 }
-                .context("Failed to parse Imperator metadata")?;
+                .context("failed to deserialize Imperator metadata")?;
 
                 (meta.date.year(), meta.date.month(), meta.date.day(), None)
             }
@@ -534,15 +528,13 @@ impl WatchCommand {
                 }
 
                 let meta: Vic3MetaData = match file.meta()? {
-                    jomini::envelope::SaveMetadataKind::Text(mut txt) => {
-                        txt.deserializer().deserialize()
-                    }
-                    jomini::envelope::SaveMetadataKind::Binary(mut bin) => {
-                        Vic3BinaryDeserialization::deserializer(&mut bin, &vic3_tokens_resolver())
+                    vic3save::SaveMetadataKind::Text(mut x) => x.deserializer().deserialize(),
+                    vic3save::SaveMetadataKind::Binary(mut x) => {
+                        Vic3BinaryDeserialization::deserializer(&mut x, &vic3_tokens_resolver())
                             .deserialize()
                     }
                 }
-                .context("Failed to parse Vic3 metadata")?;
+                .context("failed to deserialize Victoria 3 metadata")?;
 
                 (
                     meta.meta_data.game_date.year(),
