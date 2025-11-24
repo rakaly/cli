@@ -1,3 +1,8 @@
+## v0.8.3 - 2025-11-24
+
+- Update to support HOI4 1.17 saves
+- Performance improvements to all operations working over binary / ironman saves.
+
 ## v0.8.2 - 2025-11-12
 
 - Add the `--interpolate` flag for variable interpolation on the json command
