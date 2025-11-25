@@ -1,3 +1,7 @@
+## v0.8.4 - 2025-11-24
+
+- Update to support EU5 1.0.8 saves
+
 ## v0.8.3 - 2025-11-24
 
 - Update to support HOI4 1.17 saves
