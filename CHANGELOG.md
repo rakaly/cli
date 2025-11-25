@@ -1,6 +1,6 @@
 ## v0.8.4 - 2025-11-24
 
-- Update to support EU5 1.0.8 saves
+- ~~Update to support EU5 1.0.8 saves~~ (this proved too optimistic)
 
 ## v0.8.3 - 2025-11-24
 
