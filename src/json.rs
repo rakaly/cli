@@ -120,7 +120,8 @@ impl JsonCommand {
                         let options = eu5save::MeltOptions::new()
                             .on_failed_resolve(strategy)
                             .verbatim(verbatim);
-                        Eu5Melt::melt(&mut (&file), options, eu5_tokens_resolver(), &mut out)?;
+                        let resolver = eu5save::SaveResolver::from_file(&file, eu5_tokens_resolver())?;
+                        Eu5Melt::melt(&mut (&file), options, &resolver, &mut out)?;
                     }
                     Some("ck3") => {
                         let options = ck3save::MeltOptions::new()

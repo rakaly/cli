@@ -131,7 +131,8 @@ impl Melter {
                 let options = eu5save::MeltOptions::new()
                     .on_failed_resolve(self.options.resolve)
                     .verbatim(self.options.retain);
-                let out = Eu5Melt::melt(&mut (&file), options, eu5_tokens_resolver(), writer)?;
+                let resolver = eu5save::SaveResolver::from_file(&file, eu5_tokens_resolver())?;
+                let out = Eu5Melt::melt(&mut (&file), options, &resolver, writer)?;
                 Ok(MeltedDocument::Eu5(out))
             }
             MelterKind::Ck3 => {
