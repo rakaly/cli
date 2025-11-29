@@ -461,6 +461,7 @@ impl WatchCommand {
                 let prelude: ZipPrelude = match file.meta()? {
                     eu5save::SaveMetadataKind::Text(mut x) => x.deserializer().deserialize(),
                     eu5save::SaveMetadataKind::Binary(mut x) => {
+                        // No need to use a `SaveResolver` as meta does not use lookup tokens.
                         Eu5BinaryDeserialization::deserializer(&mut x, &eu5_tokens_resolver())
                             .deserialize()
                     }
