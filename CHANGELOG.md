@@ -1,3 +1,7 @@
+## v0.8.6 - 2025-11-28
+
+- Fix missing lookup values in EU5 1.0.8 saves
+
 ## v0.8.5 - 2025-11-28
 
 - Update to support EU5 1.0.8 saves
