@@ -1,3 +1,8 @@
+## v0.8.5 - 2025-11-28
+
+- Update to support EU5 1.0.8 saves
+- Fix incorrect melting output for "resistance" fields in EU5
+
 ## v0.8.4 - 2025-11-24
 
 - ~~Update to support EU5 1.0.8 saves~~ (this proved too optimistic)
