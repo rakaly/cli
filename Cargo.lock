@@ -472,7 +472,7 @@ checksum = "d231dfb89cfffdbc30e7fc41579ed6066ad03abda9e567ccafae602b97ec5024"
 [[package]]
 name = "hoi4save"
 version = "0.4.0"
-source = "git+https://github.com/rakaly/hoi4save.git#da1b961338802396bef3de357aa4df06a6778917"
+source = "git+https://github.com/rakaly/hoi4save.git#baba2459f2f3e60b24a70756e8d5a3905f6b35cf"
 dependencies = [
  "jomini",
  "serde",
