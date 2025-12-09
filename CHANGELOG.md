@@ -1,3 +1,7 @@
+## v0.8.8 - 2025-12-09
+
+- Improve melting support for EU5 1.0.8+ saves
+
 ## v0.8.7 - 2025-12-06
 
 - Update to support melting EU5 1.0.10 saves
