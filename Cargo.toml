@@ -1,6 +1,6 @@
 [package]
 name = "rakaly"
-version = "0.8.8"
+version = "0.8.9"
 authors = ["Nick Babcock <nbabcock19@hotmail.com>"]
 edition = "2018"
 publish = false
