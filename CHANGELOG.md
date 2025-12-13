@@ -1,3 +1,7 @@
+## v0.8.9 - 2025-12-12
+
+- Update to support Vic3 1.12 saves
+
 ## v0.8.8 - 2025-12-09
 
 - Improve melting support for EU5 1.0.8+ saves
