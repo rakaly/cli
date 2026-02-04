@@ -1,3 +1,7 @@
+## v0.8.11 - 2026-02-04
+
+- Initial support for EU5 1.1.0 saves
+
 ## v0.8.10 - 2025-12-15
 
 - Improve EU5 melter accuracy, fixing blank map for melted saves with custom names.
