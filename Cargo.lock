@@ -697,9 +697,9 @@ dependencies = [
 
 [[package]]
 name = "jomini"
-version = "0.34.0"
+version = "0.34.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24622a86da2f450d0b3eebcf925a33c9541e520daab442f9b2756430959ea772"
+checksum = "7c7674b19c84addd10c6e31ffe84ecdecff8025dab81bdbc6eab979107ca9e11"
 dependencies = [
  "flate2",
  "itoa",
