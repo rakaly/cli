@@ -154,8 +154,9 @@ impl JsonCommand {
                     return Err(anyhow!("Unexpected file kind after melting"));
                 };
 
-                let data = txt.body().get_ref();
-                let tape = TextTape::from_slice(data.get_ref())?;
+                let all = txt.body().get_ref().get_ref().as_slice();
+                let body = &all[txt.body().content_offset() as usize..];
+                let tape = TextTape::from_slice(body)?;
                 tape.utf8_reader()
                     .json()
                     .with_options(options)
