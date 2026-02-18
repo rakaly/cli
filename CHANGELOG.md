@@ -1,3 +1,7 @@
+## v0.8.13 - 2026-02-17
+
+- Fix `json` command output for PDS-jomini save files
+
 ## v0.8.12 - 2026-02-06
 
 - Improve melting support for CK3 1.18.3 saves
