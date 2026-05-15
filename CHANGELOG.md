@@ -1,3 +1,7 @@
+## v0.8.16 - 2026-05-15
+
+- Improved support for preserving HOI4 percentages in melted output
+
 ## v0.8.15 - 2026-04-30
 
 - Update to support EU5 1.2 saves
