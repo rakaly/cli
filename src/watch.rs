@@ -107,11 +107,25 @@ impl FromStr for GameType {
             "ck3" => Ok(GameType::Ck3),
             "rome" => Ok(GameType::Imperator),
             "hoi4" => Ok(GameType::Hoi4),
-            "v3" => Ok(GameType::Vic3),
+            "v3" | "vic3" => Ok(GameType::Vic3),
             _ => Err(anyhow!(
                 "Only eu4, eu5, ck3, vic3, hoi4, and imperator files supported"
             )),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn vic3_format_aliases_parse() {
+        assert!(matches!("v3".parse::<GameType>().unwrap(), GameType::Vic3));
+        assert!(matches!(
+            "vic3".parse::<GameType>().unwrap(),
+            GameType::Vic3
+        ));
     }
 }
 
