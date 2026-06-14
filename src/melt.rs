@@ -109,7 +109,7 @@ impl FromStr for MelterKind {
             "ck3" => Ok(MelterKind::Ck3),
             "rome" => Ok(MelterKind::Imperator),
             "hoi4" => Ok(MelterKind::Hoi4),
-            "v3" => Ok(MelterKind::Vic3),
+            "v3" | "vic3" => Ok(MelterKind::Vic3),
             _ => bail!("Only eu4, eu5, ck3, vic3, hoi4, and imperator files supported"),
         }
     }
@@ -295,5 +295,17 @@ mod tests {
             melted_path("/tmp/gamestate"),
             Path::new("/tmp").join("gamestate_melted")
         );
+    }
+
+    #[test]
+    fn vic3_format_aliases_parse() {
+        assert!(matches!(
+            "v3".parse::<MelterKind>().unwrap(),
+            MelterKind::Vic3
+        ));
+        assert!(matches!(
+            "vic3".parse::<MelterKind>().unwrap(),
+            MelterKind::Vic3
+        ));
     }
 }
