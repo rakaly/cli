@@ -14,6 +14,9 @@ jobs:
     env:
       CARGO: cargo
       TARGET:
+      # Fork/Dependabot PRs don't get secrets, so this is the real test for
+      # whether we can clone the private tokens repo.
+      HAS_TOKENS_PAT: ${{ secrets.GH_PAT != '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -34,13 +37,23 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    # Fail loudly if a trusted build (push/tag/schedule) is missing tokens
+    # instead of shipping a binary built with empty ones.
+    - name: Require tokens for trusted builds
+      if: github.event_name != 'pull_request' && env.HAS_TOKENS_PAT != 'true'
+      shell: bash
+      run: echo "::error::GH_PAT secret missing for a trusted build" && exit 1
+
+    # Skipped without a PAT (fork/Dependabot PRs); build.rs then supplies
+    # empty token files.
     - uses: actions/checkout@v4
       name: Clone tokens
+      if: env.HAS_TOKENS_PAT == 'true'
       with:
         path: assets/
         repository: pdx-tools/tokens
         token: ${{secrets.GH_PAT}}
-        
+
     - name: Cache saves
       uses: actions/cache@v4
       with:
