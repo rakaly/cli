@@ -1,3 +1,9 @@
+## v0.8.17 - 2026-06-15
+
+- Update to support EU5 1.3 saves
+- Update to support HOI4 1.19 saves
+- Recognize `vic3` as an argument to `--format`
+
 ## v0.8.16 - 2026-05-15
 
 - Improved support for preserving HOI4 percentages in melted output
