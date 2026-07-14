@@ -1,3 +1,7 @@
+## v0.8.18 - 2026-07-14
+
+- Update to support more EU5 1.3 saves
+
 ## v0.8.17 - 2026-06-15
 
 - Update to support EU5 1.3 saves
