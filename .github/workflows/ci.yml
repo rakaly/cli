@@ -35,7 +35,7 @@ jobs:
         - build: x86_64-pc-windows-msvc
           os: windows-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     # Fail loudly if a trusted build (push/tag/schedule) is missing tokens
     # instead of shipping a binary built with empty ones.
@@ -46,7 +46,7 @@ jobs:
 
     # Skipped without a PAT (fork/Dependabot PRs); build.rs then supplies
     # empty token files.
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       name: Clone tokens
       if: env.HAS_TOKENS_PAT == 'true'
       with:
@@ -55,7 +55,7 @@ jobs:
         token: ${{secrets.GH_PAT}}
 
     - name: Cache saves
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: assets/saves
         key: assets/saves
@@ -89,7 +89,7 @@ jobs:
           cp "target/${{ matrix.build }}/release/rakaly" "$STAGING/"
         fi
         echo "ASSET=$STAGING" >> $GITHUB_ENV
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         path: ${{ env.ASSET }}
         name: ${{ env.ASSET }}
@@ -99,8 +99,8 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/download-artifact@v4
+    - uses: actions/checkout@v7
+    - uses: actions/download-artifact@v8
       with:
         path: artifacts-temp
     - name: Flatten artifacts
@@ -117,7 +117,7 @@ jobs:
         ls -lR ../artifacts
     - name: Create Release
       if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-      uses: actions/github-script@v7
+      uses: actions/github-script@v9
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
