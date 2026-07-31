@@ -1,3 +1,7 @@
+## v0.8.19 - 2026-07-31
+
+- Update to support latest Vic3 1.13.9 saves
+
 ## v0.8.18 - 2026-07-14
 
 - Update to support more EU5 1.3 saves
