@@ -1,3 +1,7 @@
+## v0.8.20 - 2026-09-28
+
+- Update to support HOI4 1.19.3 saves
+
 ## v0.8.19 - 2026-07-31
 
 - Update to support latest Vic3 1.13.9 saves
