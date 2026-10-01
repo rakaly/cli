@@ -1,3 +1,8 @@
+## v0.8.21 - 2026-10-01
+
+- Update to support EU5 1.4 saves
+- Update to support CK3 1.20 saves
+
 ## v0.8.20 - 2026-09-28
 
 - Update to support HOI4 1.19.3 saves
