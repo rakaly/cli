@@ -50,7 +50,9 @@ pub(crate) struct WatchCommand {
     #[argh(option)]
     frequency: Option<String>,
 
-    /// file to watch for changes
+    /// file to watch for changes. For EU5, the command also watches the other
+    /// saves in the same directory that have the same playthrough id, such as
+    /// autosaves.
     #[argh(positional)]
     file: PathBuf,
 }
@@ -127,6 +129,31 @@ mod tests {
             GameType::Vic3
         ));
     }
+
+    #[test]
+    fn eu5_playthrough_saves_match() {
+        let cmd = WatchCommand {
+            format: None,
+            out_dir: None,
+            frequency: None,
+            file: PathBuf::from(
+                "saves/SP_Observer_1339_02_03_2e9248ee-9ee9-48ac-8ce2-8f5ae1c7e923.eu5",
+            ),
+        };
+        let suffix = "_2e9248ee-9ee9-48ac-8ce2-8f5ae1c7e923";
+        let matches = |name: &str| cmd.is_playthrough_save(&Path::new("saves").join(name), suffix);
+
+        assert!(matches("autosave_2e9248ee-9ee9-48ac-8ce2-8f5ae1c7e923.eu5"));
+        assert!(matches(
+            "SP_Observer_1340_01_01_2e9248ee-9ee9-48ac-8ce2-8f5ae1c7e923.eu5"
+        ));
+        assert!(!matches(
+            "autosave_00000000-9ee9-48ac-8ce2-8f5ae1c7e923.eu5"
+        ));
+        assert!(!matches(
+            "autosave_2e9248ee-9ee9-48ac-8ce2-8f5ae1c7e923.tmp"
+        ));
+    }
 }
 
 impl GameType {
@@ -187,6 +214,7 @@ impl Display for GameDate {
 struct SaveInfo {
     date: GameDate,
     playthrough_name: Option<String>,
+    playthrough_id: Option<String>,
 }
 
 /// Sanitize a filename by replacing invalid characters with dashes
@@ -252,13 +280,21 @@ impl WatchCommand {
         watcher.watch(parent_dir.as_ref(), RecursiveMode::NonRecursive)?;
 
         // Try to get the playthrough_name to use as the default output directory
-        let playthrough_name_for_dir = if let Ok(save_info) = self.process_file(&game_type) {
-            save_info
-                .playthrough_name
-                .map(|name| sanitize_filename(&name))
-        } else {
-            None
-        };
+        let initial_info = self.process_file(&self.file, &game_type).ok();
+        let playthrough_name_for_dir = initial_info
+            .as_ref()
+            .and_then(|info| info.playthrough_name.as_deref())
+            .map(sanitize_filename);
+
+        // EU5 writes saves of a playthrough to different files (eg:
+        // "SP_Observer_1339_02_03_<id>.eu5" and "autosave_<id>.eu5"). Watch
+        // all the files that have the playthrough id at the end of the name.
+        let playthrough_suffix = initial_info
+            .and_then(|info| info.playthrough_id)
+            .map(|id| format!("_{}", id));
+        if let Some(suffix) = &playthrough_suffix {
+            info!("Watching saves that end with: {}", suffix);
+        }
 
         // Default output directory is subdirectory with the playthrough_name if available,
         // otherwise with the file stem name in the parent directory
@@ -320,7 +356,7 @@ impl WatchCommand {
         .context("Error setting Ctrl+C handler")?;
 
         let debounce_timeout = Duration::from_millis(500);
-        let mut last_event: Option<EventKind> = None;
+        let mut pending_path: Option<PathBuf> = None;
 
         while running.load(Ordering::SeqCst) {
             // Try to receive an event with a short timeout to allow debounce checking
@@ -331,15 +367,27 @@ impl WatchCommand {
                         continue;
                     };
 
-                    // Whenever we copy a file, we want to ignore the next event
-                    // that comes in as it will be our event
-                    if ignore_next {
-                        debug!("Ignoring event due to previous copy operation");
-                        ignore_next = false;
-                        continue;
-                    }
+                    let Some(suffix) = &playthrough_suffix else {
+                        // Whenever we copy a file, we want to ignore the next event
+                        // that comes in as it will be our event
+                        if ignore_next {
+                            debug!("Ignoring event due to previous copy operation");
+                            ignore_next = false;
+                            continue;
+                        }
 
-                    last_event = Some(event.kind);
+                        pending_path = Some(self.file.clone());
+                        continue;
+                    };
+
+                    if let Some(path) = event
+                        .paths
+                        .iter()
+                        .rev()
+                        .find(|path| self.is_playthrough_save(path, suffix))
+                    {
+                        pending_path = Some(path.clone());
+                    }
                     continue;
                 }
                 Err(mpsc::RecvTimeoutError::Timeout) => {}
@@ -348,9 +396,9 @@ impl WatchCommand {
                 }
             }
 
-            if last_event.take().is_none() {
+            let Some(save_path) = pending_path.take() else {
                 continue;
-            }
+            };
 
             // Process file and create snapshots only if we're still running
             if !running.load(Ordering::SeqCst) {
@@ -359,11 +407,12 @@ impl WatchCommand {
 
             // Measure time taken to process the file
             let start = Instant::now();
-            let save_info = match self.process_file(&game_type) {
+            let save_info = match self.process_file(&save_path, &game_type) {
                 Ok(save_info) => {
                     let duration = start.elapsed();
                     info!(
-                        "Detected file with date: {} [{}ms]",
+                        "Detected {} with date: {} [{}ms]",
+                        save_path.display(),
                         save_info.date,
                         duration.as_millis()
                     );
@@ -411,7 +460,7 @@ impl WatchCommand {
             }
 
             let copy_start = Instant::now();
-            if let Err(e) = fs::copy(&self.file, &out_path) {
+            if let Err(e) = fs::copy(&save_path, &out_path) {
                 error!("Error copying file: {}", e);
             } else {
                 let duration = copy_start.elapsed();
@@ -429,12 +478,28 @@ impl WatchCommand {
         Ok(0)
     }
 
-    fn process_file(&self, game_type: &GameType) -> anyhow::Result<SaveInfo> {
-        let file = std::fs::File::open(&self.file)
-            .with_context(|| format!("Failed to open file: {}", self.file.display()))?;
+    /// Return true if the path is the watched file, or a save with the same
+    /// extension as the watched file and a name that ends with the
+    /// playthrough suffix. The watcher only reports files in the directory of
+    /// the watched file.
+    fn is_playthrough_save(&self, path: &Path, suffix: &str) -> bool {
+        if path.file_name() == self.file.file_name() {
+            return true;
+        }
+
+        path.extension() == self.file.extension()
+            && path
+                .file_stem()
+                .and_then(|stem| stem.to_str())
+                .is_some_and(|stem| stem.ends_with(suffix))
+    }
+
+    fn process_file(&self, path: &Path, game_type: &GameType) -> anyhow::Result<SaveInfo> {
+        let file = std::fs::File::open(path)
+            .with_context(|| format!("Failed to open file: {}", path.display()))?;
 
         // Parse the save to extract date (and make sure it is valid)
-        let (year, month, day, playthrough_name) = match game_type {
+        let (year, month, day, playthrough_name, playthrough_id) = match game_type {
             GameType::Eu4 => {
                 let file =
                     eu4save::Eu4File::from_file(file).context("Failed to parse EU4 save file")?;
@@ -455,7 +520,13 @@ impl WatchCommand {
                     }
                 };
 
-                (meta.date.year(), meta.date.month(), meta.date.day(), None)
+                (
+                    meta.date.year(),
+                    meta.date.month(),
+                    meta.date.day(),
+                    None,
+                    None,
+                )
             }
             GameType::Eu5 => {
                 #[derive(Debug, Deserialize)]
@@ -467,6 +538,8 @@ impl WatchCommand {
                 pub struct Metadata {
                     pub date: Eu5Date,
                     pub playthrough_name: String,
+                    #[serde(default)]
+                    pub playthrough_id: String,
                 }
 
                 let file =
@@ -488,7 +561,8 @@ impl WatchCommand {
                 } else {
                     Some(prelude.metadata.playthrough_name)
                 };
-                (date.year(), date.month(), date.day(), name)
+                let id = Some(prelude.metadata.playthrough_id).filter(|id| !id.is_empty());
+                (date.year(), date.month(), date.day(), name, id)
             }
             GameType::Ck3 => {
                 let file =
@@ -507,6 +581,7 @@ impl WatchCommand {
                     meta.meta_data.meta_date.year(),
                     meta.meta_data.meta_date.month(),
                     meta.meta_data.meta_date.day(),
+                    None,
                     None,
                 )
             }
@@ -531,7 +606,13 @@ impl WatchCommand {
                 }
                 .context("failed to deserialize Imperator metadata")?;
 
-                (meta.date.year(), meta.date.month(), meta.date.day(), None)
+                (
+                    meta.date.year(),
+                    meta.date.month(),
+                    meta.date.day(),
+                    None,
+                    None,
+                )
             }
             GameType::Vic3 => {
                 let file = vic3save::Vic3File::from_file(file)
@@ -556,6 +637,7 @@ impl WatchCommand {
                     meta.meta_data.game_date.month(),
                     meta.meta_data.game_date.day(),
                     None,
+                    None,
                 )
             }
             GameType::Hoi4 => {
@@ -574,7 +656,13 @@ impl WatchCommand {
                         .deserialize::<hoi4save::models::Hoi4Save>()?,
                 };
 
-                (meta.date.year(), meta.date.month(), meta.date.day(), None)
+                (
+                    meta.date.year(),
+                    meta.date.month(),
+                    meta.date.day(),
+                    None,
+                    None,
+                )
             }
         };
 
@@ -583,6 +671,7 @@ impl WatchCommand {
         Ok(SaveInfo {
             date: game_date,
             playthrough_name,
+            playthrough_id,
         })
     }
 
