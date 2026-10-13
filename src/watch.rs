@@ -280,7 +280,9 @@ impl WatchCommand {
         watcher.watch(parent_dir.as_ref(), RecursiveMode::NonRecursive)?;
 
         // Try to get the playthrough_name to use as the default output directory
-        let initial_info = self.process_file(&self.file, &game_type).ok();
+        let initial_info = fs::File::open(&self.file)
+            .ok()
+            .and_then(|file| self.process_file(file, &game_type).ok());
         let playthrough_name_for_dir = initial_info
             .as_ref()
             .and_then(|info| info.playthrough_name.as_deref())
@@ -407,7 +409,22 @@ impl WatchCommand {
 
             // Measure time taken to process the file
             let start = Instant::now();
-            let save_info = match self.process_file(&save_path, &game_type) {
+            let file = match fs::File::open(&save_path) {
+                Ok(file) => file,
+                Err(e) => {
+                    // The game locks the save while it writes the save. A
+                    // later event processes the complete save.
+                    debug!(
+                        "Save is not ready: {}: {} [{}ms]",
+                        save_path.display(),
+                        e,
+                        start.elapsed().as_millis()
+                    );
+                    continue;
+                }
+            };
+
+            let save_info = match self.process_file(file, &game_type) {
                 Ok(save_info) => {
                     let duration = start.elapsed();
                     info!(
@@ -420,7 +437,12 @@ impl WatchCommand {
                 }
                 Err(e) => {
                     let duration = start.elapsed();
-                    error!("Error processing file: {} [{}ms]", e, duration.as_millis());
+                    error!(
+                        "Error processing file: {}: {:#} [{}ms]",
+                        save_path.display(),
+                        e,
+                        duration.as_millis()
+                    );
                     continue;
                 }
             };
@@ -494,10 +516,7 @@ impl WatchCommand {
                 .is_some_and(|stem| stem.ends_with(suffix))
     }
 
-    fn process_file(&self, path: &Path, game_type: &GameType) -> anyhow::Result<SaveInfo> {
-        let file = std::fs::File::open(path)
-            .with_context(|| format!("Failed to open file: {}", path.display()))?;
-
+    fn process_file(&self, file: fs::File, game_type: &GameType) -> anyhow::Result<SaveInfo> {
         // Parse the save to extract date (and make sure it is valid)
         let (year, month, day, playthrough_name, playthrough_id) = match game_type {
             GameType::Eu4 => {
