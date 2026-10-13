@@ -5,29 +5,29 @@ use std::{
 
 static DOWNLOADER: Mutex<()> = Mutex::new(());
 
-/// Request data from s3 and cache it locally
-pub fn request<S: AsRef<str>>(bucket_name: &str, input: S) -> PathBuf {
+/// Download a game fixture from a CDN and cache it locally.
+pub fn request<S: AsRef<str>>(game: &str, input: S) -> PathBuf {
     let reffed = input.as_ref();
-    let cache = Path::new("assets").join("saves").join(reffed);
+    let cache = Path::new("assets")
+        .join("saves")
+        .join(game)
+        .join(reffed);
     if !cache.exists() {
         let _guard = DOWNLOADER.lock().unwrap();
         if cache.exists() {
             return cache;
         }
 
-        let url = format!(
-            "https://{}.s3.us-west-002.backblazeb2.com/{}",
-            bucket_name, reffed
-        );
-        let resp = attohttpc::get(&url).send().unwrap();
+        let url = format!("https://cdn-dev.pdx.tools/{game}-saves/{reffed}");
+        let mut resp = attohttpc::get(&url).send().unwrap();
 
         if !resp.is_success() {
-            panic!("expected a 200 code from s3");
-        } else {
-            let data = resp.bytes().unwrap();
-            std::fs::create_dir_all(cache.parent().unwrap()).unwrap();
-            std::fs::write(&cache, &data).unwrap();
+            panic!("expected HTTP 200 from CDN");
         }
+
+        std::fs::create_dir_all(cache.parent().unwrap()).unwrap();
+        let mut file = std::fs::File::create(&cache).unwrap();
+        std::io::copy(&mut resp, &mut file).unwrap();
     }
 
     cache

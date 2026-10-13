@@ -5,7 +5,7 @@ use std::path::Path;
 
 #[test]
 fn test_eu4_melt() {
-    let file = utils::request("eu4saves-test-cases", "kandy2.bin.eu4");
+    let file = utils::request("eu4", "kandy2.bin.eu4");
     let mut cmd = Command::cargo_bin("rakaly").unwrap();
     let assert = cmd.arg("melt").arg(&file).assert();
 
@@ -24,7 +24,7 @@ fn test_eu4_melt() {
 
 #[test]
 fn test_eu4_melt_stdout() {
-    let file = utils::request("eu4saves-test-cases", "kandy2.bin.eu4");
+    let file = utils::request("eu4", "kandy2.bin.eu4");
     let mut cmd = Command::cargo_bin("rakaly").unwrap();
     let assert = cmd.arg("melt").arg("--to-stdout").arg(&file).assert();
 
@@ -38,7 +38,7 @@ fn test_eu4_melt_stdout() {
 
 #[test]
 fn test_eu4_specify_format() {
-    let file = utils::request("eu4saves-test-cases", "kandy2.bin.eu4");
+    let file = utils::request("eu4", "kandy2.bin.eu4");
     let off_path = file.with_extension("");
     std::fs::copy(file, &off_path).unwrap();
 
@@ -61,7 +61,7 @@ fn test_eu4_specify_format() {
 
 #[test]
 fn test_eu4_melt_to_out() {
-    let file = utils::request("eu4saves-test-cases", "kandy2.bin.eu4");
+    let file = utils::request("eu4", "kandy2.bin.eu4");
     let mut cmd = Command::cargo_bin("rakaly").unwrap();
     let output_path = Path::new("assets").join("saves").join("my_save");
     cmd.arg("melt")
@@ -81,7 +81,7 @@ fn test_eu4_melt_to_out() {
 
 #[test]
 fn test_eu4_melt_stdin_to_stdout() {
-    let file = utils::request("eu4saves-test-cases", "kandy2.bin.eu4");
+    let file = utils::request("eu4", "kandy2.bin.eu4");
     let mut cmd = Command::cargo_bin("rakaly").unwrap();
     let assert = cmd
         .arg("melt")
@@ -101,7 +101,7 @@ fn test_eu4_melt_stdin_to_stdout() {
 
 #[test]
 fn test_eu4_melt_retain() {
-    let file = utils::request("eu4saves-test-cases", "kandy2.bin.eu4");
+    let file = utils::request("eu4", "kandy2.bin.eu4");
     let mut cmd = Command::cargo_bin("rakaly").unwrap();
     let assert = cmd
         .arg("melt")
@@ -120,7 +120,7 @@ fn test_eu4_melt_retain() {
 
 #[test]
 fn test_eu4_no_filename() {
-    let file = utils::request("eu4saves-test-cases", "kandy2.bin.eu4");
+    let file = utils::request("eu4", "kandy2.bin.eu4");
     let off_path = file.with_file_name(".eu4");
     std::fs::copy(&file, &off_path).unwrap();
 
@@ -130,4 +130,23 @@ fn test_eu4_no_filename() {
 
     let melted_path = file.with_file_name("melted.eu4");
     assert!(melted_path.exists());
+}
+
+#[test]
+fn test_eu5_1_4_melt() {
+    let file = utils::request(
+        "eu5",
+        "SP_MLO_1617_04_01_166d38a1-bffb-4182-9e37-9540b0c2ac4f.eu5",
+    );
+    let melted_path = file.with_file_name("melted_mlo.eu5");
+    let mut cmd = Command::cargo_bin("rakaly").unwrap();
+    cmd.arg("melt")
+        .arg("--out")
+        .arg(&melted_path)
+        .arg(file)
+        .assert()
+        .success();
+
+    let melted = eu5save::Eu5File::from_file(std::fs::File::open(melted_path).unwrap()).unwrap();
+    assert!(melted.header().kind().is_text());
 }
