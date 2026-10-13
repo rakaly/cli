@@ -1,3 +1,8 @@
+## v0.8.22 - 2026-10-13
+
+- Improved support for EU5 1.4 saves
+- `watch` makes snapshots of all saves in an EU5 playthrough, including autosaves
+
 ## v0.8.21 - 2026-10-01
 
 - Update to support EU5 1.4 saves
