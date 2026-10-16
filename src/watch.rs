@@ -5,7 +5,7 @@ use eu4save::file::{Eu4FileEntryName, Eu4FsFileKind};
 use eu5save::{Eu5BinaryDeserialization, Eu5Date};
 use hoi4save::file::Hoi4FsFileKind;
 use imperator_save::ImperatorBinaryDeserialization;
-use jomini::TextDeserializer;
+use jomini::{binary::TokenResolver, TextDeserializer};
 use log::{debug, error, info, trace};
 use notify::{Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use serde::Deserialize;
@@ -50,7 +50,7 @@ pub(crate) struct WatchCommand {
     #[argh(option)]
     frequency: Option<String>,
 
-    /// file to watch for changes. For EU5 and HOI4, the command also watches
+    /// file to watch for changes. For EU5, HOI4, and Vic3, the command also watches
     /// the other saves in the same directory that have the same playthrough
     /// id, such as autosaves.
     #[argh(positional)]
@@ -233,6 +233,52 @@ struct SaveInfo {
     playthrough_id: Option<String>,
 }
 
+/// Read the top-level `playthrough_id` of the Vic3 gamestate. The key is near
+/// the start of the gamestate, thus the function stops when it finds the key
+/// and does not parse the full save.
+fn vic3_playthrough_id<R: vic3save::ReaderAt>(
+    file: &vic3save::Vic3File<R>,
+    resolver: &impl TokenResolver,
+) -> anyhow::Result<Option<String>> {
+    let mut is_id_key = false;
+    match file.gamestate()? {
+        vic3save::SaveContentKind::Text(gamestate) => {
+            let mut reader = jomini::text::TokenReader::new(gamestate);
+            while let Some(token) = reader.next()? {
+                match token {
+                    jomini::text::Token::Open => reader.skip_container()?,
+                    jomini::text::Token::Operator(_) => {}
+                    jomini::text::Token::Quoted(id) if is_id_key => {
+                        return Ok(Some(id.to_string()));
+                    }
+                    jomini::text::Token::Unquoted(key) => {
+                        is_id_key = key.as_bytes() == b"playthrough_id"
+                    }
+                    _ => is_id_key = false,
+                }
+            }
+        }
+        vic3save::SaveContentKind::Binary(gamestate) => {
+            let mut reader = jomini::binary::TokenReader::new(gamestate);
+            while let Some(token) = reader.next()? {
+                match token {
+                    jomini::binary::Token::Open => reader.skip_container()?,
+                    jomini::binary::Token::Equal => {}
+                    jomini::binary::Token::Quoted(id) if is_id_key => {
+                        return Ok(Some(id.to_string()));
+                    }
+                    jomini::binary::Token::Id(key) => {
+                        is_id_key = resolver.resolve(key) == Some("playthrough_id")
+                    }
+                    _ => is_id_key = false,
+                }
+            }
+        }
+    }
+
+    Ok(None)
+}
+
 /// Sanitize a filename by replacing invalid characters with dashes
 fn sanitize_filename(name: &str) -> String {
     name.chars()
@@ -304,12 +350,13 @@ impl WatchCommand {
             .and_then(|info| info.playthrough_name.as_deref())
             .map(sanitize_filename);
 
-        // EU5 and HOI4 write saves of a playthrough to different files (eg:
-        // "SP_Observer_1339_02_03_<id>.eu5" and "autosave_<id>.eu5", or
-        // "GER_1936_01_01.hoi4" and "autosave.hoi4"). Watch all the saves
-        // that have the playthrough id. The EU5 file name ends with the
-        // playthrough id. The HOI4 file name does not have the playthrough id,
-        // thus the command parses each save to get its id.
+        // EU5, HOI4, and Vic3 write saves of a playthrough to different files
+        // (eg: "SP_Observer_1339_02_03_<id>.eu5" and "autosave_<id>.eu5", or
+        // "GER_1936_01_01.hoi4" and "autosave.hoi4", or "usa.v3" and
+        // "autosave_3.v3"). Watch all the saves that have the playthrough id.
+        // The EU5 file name ends with the playthrough id. The HOI4 and Vic3
+        // file names do not have the playthrough id, thus the command parses
+        // each save to get its id.
         let playthrough_id = initial_info.and_then(|info| info.playthrough_id);
         let playthrough_suffix = playthrough_id
             .as_ref()
@@ -680,21 +727,23 @@ impl WatchCommand {
                     meta_data: vic3save::savefile::MetaData,
                 }
 
+                let resolver = vic3_tokens_resolver();
                 let meta: Vic3MetaData = match file.meta()? {
                     vic3save::SaveMetadataKind::Text(mut x) => x.deserializer().deserialize(),
                     vic3save::SaveMetadataKind::Binary(mut x) => {
-                        Vic3BinaryDeserialization::deserializer(&mut x, &vic3_tokens_resolver())
-                            .deserialize()
+                        Vic3BinaryDeserialization::deserializer(&mut x, &resolver).deserialize()
                     }
                 }
                 .context("failed to deserialize Victoria 3 metadata")?;
 
+                let id = vic3_playthrough_id(&file, &resolver)
+                    .context("failed to read Victoria 3 playthrough id")?;
                 (
                     meta.meta_data.game_date.year(),
                     meta.meta_data.game_date.month(),
                     meta.meta_data.game_date.day(),
                     None,
-                    None,
+                    id,
                 )
             }
             GameType::Hoi4 => {
