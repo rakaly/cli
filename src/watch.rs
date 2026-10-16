@@ -170,6 +170,23 @@ mod tests {
         assert!(matches("GER_1937_05_12.hoi4"));
         assert!(!matches("autosave.tmp"));
     }
+
+    #[test]
+    fn output_path_keeps_dots_in_name() {
+        let cmd = WatchCommand {
+            format: None,
+            out_dir: None,
+            frequency: None,
+            file: PathBuf::from("saves/ironman-1.19.hoi4"),
+        };
+        let out_dir = Path::new("saves").join("ironman-1.19");
+        let path = cmd.create_output_path("1936-01-29", &out_dir, &None);
+        assert_eq!(path, out_dir.join("ironman-1.19_1936-01-29.hoi4"));
+
+        let name = Some(String::from("Game v1.2"));
+        let path = cmd.create_output_path("1936-01-29", &out_dir, &name);
+        assert_eq!(path, out_dir.join("Game v1.2_1936-01-29.hoi4"));
+    }
 }
 
 impl GameType {
@@ -823,14 +840,12 @@ impl WatchCommand {
         new_filename.push("_");
         new_filename.push(date);
 
-        let mut path = out_dir.to_path_buf();
-        path.push(new_filename);
-
         if !extension.is_empty() {
-            path.set_extension(extension);
+            new_filename.push(".");
+            new_filename.push(extension);
         }
 
-        path
+        out_dir.join(new_filename)
     }
 
     fn find_snapshots(
