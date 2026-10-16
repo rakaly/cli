@@ -17,7 +17,7 @@ fn test_eu4_melt() {
     let data = std::fs::read(&melted_path).unwrap();
     let file = eu4save::Eu4File::from_slice(&data).unwrap();
     let _save = file
-        .parse_save(&eu4save::SegmentedResolver::empty())
+        .parse_save(eu4save::SegmentedResolver::empty())
         .unwrap();
     assert_eq!(file.encoding(), eu4save::Encoding::Text)
 }
@@ -31,7 +31,7 @@ fn test_eu4_melt_stdout() {
     let out = assert.get_output();
     let file = eu4save::Eu4File::from_slice(&out.stdout).unwrap();
     let _save = file
-        .parse_save(&eu4save::SegmentedResolver::empty())
+        .parse_save(eu4save::SegmentedResolver::empty())
         .unwrap();
     assert_eq!(file.encoding(), eu4save::Encoding::Text)
 }
@@ -54,7 +54,7 @@ fn test_eu4_specify_format() {
     let out = assert.get_output();
     let file = eu4save::Eu4File::from_slice(&out.stdout).unwrap();
     let _save = file
-        .parse_save(&eu4save::SegmentedResolver::empty())
+        .parse_save(eu4save::SegmentedResolver::empty())
         .unwrap();
     assert_eq!(file.encoding(), eu4save::Encoding::Text)
 }
@@ -74,7 +74,7 @@ fn test_eu4_melt_to_out() {
     let data = std::fs::read(&output_path).unwrap();
     let file = eu4save::Eu4File::from_slice(&data).unwrap();
     let _save = file
-        .parse_save(&eu4save::SegmentedResolver::empty())
+        .parse_save(eu4save::SegmentedResolver::empty())
         .unwrap();
     assert_eq!(file.encoding(), eu4save::Encoding::Text)
 }
@@ -94,7 +94,7 @@ fn test_eu4_melt_stdin_to_stdout() {
     let out = assert.get_output();
     let file = eu4save::Eu4File::from_slice(&out.stdout).unwrap();
     let _save = file
-        .parse_save(&eu4save::SegmentedResolver::empty())
+        .parse_save(eu4save::SegmentedResolver::empty())
         .unwrap();
     assert_eq!(file.encoding(), eu4save::Encoding::Text)
 }
@@ -113,7 +113,7 @@ fn test_eu4_melt_retain() {
     let out = assert.get_output();
     let file = eu4save::Eu4File::from_slice(&out.stdout).unwrap();
     let _save = file
-        .parse_save(&eu4save::SegmentedResolver::empty())
+        .parse_save(eu4save::SegmentedResolver::empty())
         .unwrap();
     assert_eq!(file.encoding(), eu4save::Encoding::Text)
 }
