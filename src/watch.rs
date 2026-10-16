@@ -50,9 +50,9 @@ pub(crate) struct WatchCommand {
     #[argh(option)]
     frequency: Option<String>,
 
-    /// file to watch for changes. For EU5, the command also watches the other
-    /// saves in the same directory that have the same playthrough id, such as
-    /// autosaves.
+    /// file to watch for changes. For EU5 and HOI4, the command also watches
+    /// the other saves in the same directory that have the same playthrough
+    /// id, such as autosaves.
     #[argh(positional)]
     file: PathBuf,
 }
@@ -141,7 +141,8 @@ mod tests {
             ),
         };
         let suffix = "_2e9248ee-9ee9-48ac-8ce2-8f5ae1c7e923";
-        let matches = |name: &str| cmd.is_playthrough_save(&Path::new("saves").join(name), suffix);
+        let matches =
+            |name: &str| cmd.is_playthrough_save(&Path::new("saves").join(name), Some(suffix));
 
         assert!(matches("autosave_2e9248ee-9ee9-48ac-8ce2-8f5ae1c7e923.eu5"));
         assert!(matches(
@@ -153,6 +154,21 @@ mod tests {
         assert!(!matches(
             "autosave_2e9248ee-9ee9-48ac-8ce2-8f5ae1c7e923.tmp"
         ));
+    }
+
+    #[test]
+    fn hoi4_playthrough_saves_match() {
+        let cmd = WatchCommand {
+            format: None,
+            out_dir: None,
+            frequency: None,
+            file: PathBuf::from("saves/GER_1936_01_01.hoi4"),
+        };
+        let matches = |name: &str| cmd.is_playthrough_save(&Path::new("saves").join(name), None);
+
+        assert!(matches("autosave.hoi4"));
+        assert!(matches("GER_1937_05_12.hoi4"));
+        assert!(!matches("autosave.tmp"));
     }
 }
 
@@ -288,14 +304,22 @@ impl WatchCommand {
             .and_then(|info| info.playthrough_name.as_deref())
             .map(sanitize_filename);
 
-        // EU5 writes saves of a playthrough to different files (eg:
-        // "SP_Observer_1339_02_03_<id>.eu5" and "autosave_<id>.eu5"). Watch
-        // all the files that have the playthrough id at the end of the name.
-        let playthrough_suffix = initial_info
-            .and_then(|info| info.playthrough_id)
+        // EU5 and HOI4 write saves of a playthrough to different files (eg:
+        // "SP_Observer_1339_02_03_<id>.eu5" and "autosave_<id>.eu5", or
+        // "GER_1936_01_01.hoi4" and "autosave.hoi4"). Watch all the saves
+        // that have the playthrough id. The EU5 file name ends with the
+        // playthrough id. The HOI4 file name does not have the playthrough id,
+        // thus the command parses each save to get its id.
+        let playthrough_id = initial_info.and_then(|info| info.playthrough_id);
+        let playthrough_suffix = playthrough_id
+            .as_ref()
+            .filter(|_| game_type == GameType::Eu5)
             .map(|id| format!("_{}", id));
-        if let Some(suffix) = &playthrough_suffix {
-            info!("Watching saves that end with: {}", suffix);
+        if let Some(id) = &playthrough_id {
+            match &playthrough_suffix {
+                Some(suffix) => info!("Watching saves that end with: {}", suffix),
+                None => info!("Watching saves with playthrough id: {}", id),
+            }
         }
 
         // Default output directory is subdirectory with the playthrough_name if available,
@@ -369,7 +393,7 @@ impl WatchCommand {
                         continue;
                     };
 
-                    let Some(suffix) = &playthrough_suffix else {
+                    if playthrough_id.is_none() {
                         // Whenever we copy a file, we want to ignore the next event
                         // that comes in as it will be our event
                         if ignore_next {
@@ -380,13 +404,12 @@ impl WatchCommand {
 
                         pending_path = Some(self.file.clone());
                         continue;
-                    };
+                    }
 
-                    if let Some(path) = event
-                        .paths
-                        .iter()
-                        .rev()
-                        .find(|path| self.is_playthrough_save(path, suffix))
+                    if let Some(path) =
+                        event.paths.iter().rev().find(|path| {
+                            self.is_playthrough_save(path, playthrough_suffix.as_deref())
+                        })
                     {
                         pending_path = Some(path.clone());
                     }
@@ -447,6 +470,14 @@ impl WatchCommand {
                 }
             };
 
+            if playthrough_id.is_some() && save_info.playthrough_id != playthrough_id {
+                debug!(
+                    "Skipping {}, it is a save of a different playthrough",
+                    save_path.display()
+                );
+                continue;
+            }
+
             if !save_info
                 .date
                 .should_snapshot(last_snapshot.as_ref(), frequency)
@@ -502,18 +533,25 @@ impl WatchCommand {
 
     /// Return true if the path is the watched file, or a save with the same
     /// extension as the watched file and a name that ends with the
-    /// playthrough suffix. The watcher only reports files in the directory of
+    /// playthrough suffix. If there is no suffix, all saves with the same
+    /// extension match. The watcher only reports files in the directory of
     /// the watched file.
-    fn is_playthrough_save(&self, path: &Path, suffix: &str) -> bool {
+    fn is_playthrough_save(&self, path: &Path, suffix: Option<&str>) -> bool {
         if path.file_name() == self.file.file_name() {
             return true;
         }
 
-        path.extension() == self.file.extension()
-            && path
-                .file_stem()
-                .and_then(|stem| stem.to_str())
-                .is_some_and(|stem| stem.ends_with(suffix))
+        if path.extension() != self.file.extension() {
+            return false;
+        }
+
+        let Some(suffix) = suffix else {
+            return true;
+        };
+
+        path.file_stem()
+            .and_then(|stem| stem.to_str())
+            .is_some_and(|stem| stem.ends_with(suffix))
     }
 
     fn process_file(&self, file: fs::File, game_type: &GameType) -> anyhow::Result<SaveInfo> {
@@ -660,6 +698,13 @@ impl WatchCommand {
                 )
             }
             GameType::Hoi4 => {
+                #[derive(Debug, Deserialize)]
+                struct Hoi4Meta {
+                    date: hoi4save::Hoi4Date,
+                    #[serde(default)]
+                    game_unique_id: String,
+                }
+
                 let mut file = hoi4save::Hoi4File::from_file(file)
                     .context("Failed to parse HOI4 save file")?;
 
@@ -667,20 +712,21 @@ impl WatchCommand {
                     Hoi4FsFileKind::Text(file) => {
                         let reader = jomini::text::TokenReader::new(file);
                         let mut deser = TextDeserializer::from_utf8_reader(reader);
-                        deser.deserialize::<hoi4save::models::Hoi4Save>()?
+                        deser.deserialize::<Hoi4Meta>()?
                     }
                     Hoi4FsFileKind::Binary(hoi4_binary) => hoi4_binary
                         .as_ref()
                         .deserializer(hoi4_tokens_resolver())
-                        .deserialize::<hoi4save::models::Hoi4Save>()?,
+                        .deserialize::<Hoi4Meta>()?,
                 };
 
+                let id = Some(meta.game_unique_id).filter(|id| !id.is_empty());
                 (
                     meta.date.year(),
                     meta.date.month(),
                     meta.date.day(),
                     None,
-                    None,
+                    id,
                 )
             }
         };
