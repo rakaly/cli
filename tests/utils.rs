@@ -8,10 +8,7 @@ static DOWNLOADER: Mutex<()> = Mutex::new(());
 /// Download a game fixture from a CDN and cache it locally.
 pub fn request<S: AsRef<str>>(game: &str, input: S) -> PathBuf {
     let reffed = input.as_ref();
-    let cache = Path::new("assets")
-        .join("saves")
-        .join(game)
-        .join(reffed);
+    let cache = Path::new("assets").join("saves").join(game).join(reffed);
     if !cache.exists() {
         let _guard = DOWNLOADER.lock().unwrap();
         if cache.exists() {

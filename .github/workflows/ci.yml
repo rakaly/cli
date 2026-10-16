@@ -8,6 +8,16 @@ on:
   - cron: '00 01 * * *'
 
 jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - name: Check formatting
+      run: cargo fmt --check
+    - name: Clippy
+      run: cargo clippy --all-targets -- -D warnings
+
   test:
     name: test
     runs-on: ${{ matrix.os }}
