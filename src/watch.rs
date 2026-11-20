@@ -5,7 +5,7 @@ use eu4save::file::{Eu4FileEntryName, Eu4FsFileKind};
 use eu5save::{Eu5BinaryDeserialization, Eu5Date};
 use hoi4save::file::Hoi4FsFileKind;
 use imperator_save::ImperatorBinaryDeserialization;
-use jomini::{binary::TokenResolver, TextDeserializer};
+use jomini::{binary::TokenResolver, TextDeserializer, Utf8Encoding, Windows1252Encoding};
 use log::{debug, error, info, trace};
 use notify::{Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use serde::Deserialize;
@@ -627,8 +627,8 @@ impl WatchCommand {
 
                 let meta = match file.kind() {
                     Eu4FsFileKind::Text(file) => {
-                        let reader = jomini::text::TokenReader::new(file);
-                        let mut deser = TextDeserializer::from_windows1252_reader(reader);
+                        let mut deser =
+                            TextDeserializer::from_reader(file, Windows1252Encoding::new());
                         deser.deserialize::<eu4save::models::Meta>()?
                     }
                     Eu4FsFileKind::Binary(eu4_binary) => eu4_binary
@@ -776,8 +776,7 @@ impl WatchCommand {
 
                 let meta = match file.kind_mut() {
                     Hoi4FsFileKind::Text(file) => {
-                        let reader = jomini::text::TokenReader::new(file);
-                        let mut deser = TextDeserializer::from_utf8_reader(reader);
+                        let mut deser = TextDeserializer::from_reader(file, Utf8Encoding::new());
                         deser.deserialize::<Hoi4Meta>()?
                     }
                     Hoi4FsFileKind::Binary(hoi4_binary) => hoi4_binary
