@@ -6,7 +6,7 @@ edition = "2018"
 publish = false
 
 [dependencies]
-jomini = { version = "0.37.1", features = ["envelope"] }
+jomini = { version = "0.38", features = ["envelope"] }
 ck3save = { git = "https://github.com/rakaly/jomini", default-features = false }
 eu4save = { git = "https://github.com/rakaly/jomini" }
 eu5save = { git = "https://github.com/rakaly/jomini", default-features = false }
