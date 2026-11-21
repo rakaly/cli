@@ -1,3 +1,7 @@
+## v0.8.25 - 2026-11-21
+
+- Update to support HOI4 1.20 saves
+
 ## v0.8.24 - 2026-11-21
 
 - Update to support CK3 1.21 saves
