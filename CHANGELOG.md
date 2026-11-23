@@ -1,3 +1,10 @@
+## v0.8.26 - 2026-11-22
+
+- `json --interpolation` substitutes string variables
+- `json --interpolation` resolves variables in source order, and warns about unresolved variables instead of failing
+- Add `json --variables <file>` to use variables from other files
+- `json` parses more game files, but rejects operators with no key or value (`a = b = c`) and omits most CK3 reader directives
+
 ## v0.8.25 - 2026-11-21
 
 - Update to support HOI4 1.20 saves
