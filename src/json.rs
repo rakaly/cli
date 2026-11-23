@@ -8,16 +8,17 @@ use imperator_save::ImperatorMelt;
 use jomini::{
     envelope::{JominiFileKind, SaveDataKind},
     json::{DuplicateKeyMode, JsonOptions},
-    TextTape,
+    text::{syntax::parse_tape, ObjectReader},
+    Utf8Encoding, Windows1252Encoding,
 };
 use std::{
-    io::{BufWriter, Cursor},
+    io::{BufWriter, Cursor, Write},
     path::PathBuf,
 };
 use vic3save::Vic3Melt;
 
 use crate::{
-    interpolation::InterpolatedTape,
+    interpolation::{check_syntax, interpolate, load_variables},
     tokens::{
         ck3_tokens_resolver, eu4_tokens_resolver, eu5_tokens_resolver, hoi4_tokens_resolver,
         imperator_tokens_resolver, vic3_tokens_resolver,
@@ -43,6 +44,11 @@ pub(crate) struct JsonCommand {
     /// perform variable interpolation and convert exists operators to equals (requires --format)
     #[argh(switch)]
     interpolation: bool,
+
+    /// file whose variables are available to the input file (requires
+    /// --interpolation). Repeatable, and read in the order given.
+    #[argh(option)]
+    variables: Vec<PathBuf>,
 
     /// file to melt. Omission reads from stdin
     #[argh(positional)]
@@ -79,10 +85,13 @@ impl JsonCommand {
             let extension = self.file.extension().and_then(|x| x.to_str());
             if matches!(
                 extension,
-                Some("eu4") | Some("ck3") | Some("rome") | Some("hoi4") | Some("v3")
+                Some("eu4") | Some("eu5") | Some("ck3") | Some("rome") | Some("hoi4") | Some("v3")
             ) {
                 return Err(anyhow!("--interpolation flag can only be used with generic files (not game-specific file extensions), requires --format"));
             }
+        }
+        if !self.variables.is_empty() && !self.interpolation {
+            return Err(anyhow!("--variables requires --interpolation"));
         }
         let extension = self.file.extension().and_then(|x| x.to_str());
         let data = std::fs::read(&self.file)?;
@@ -94,9 +103,9 @@ impl JsonCommand {
         let verbatim = true;
         let strategy = jomini::binary::FailedResolveStrategy::Ignore;
         let stdout = std::io::stdout();
-        let writer = BufWriter::new(stdout.lock());
+        let mut writer = BufWriter::new(stdout.lock());
 
-        let _ = match extension {
+        let written = match extension {
             Some("eu4") => {
                 let file = Eu4File::from_slice(&data)?;
                 let mut out = Cursor::new(Vec::new());
@@ -110,7 +119,10 @@ impl JsonCommand {
                     Eu4ParsedText::from_slice(&data)?
                 };
 
-                text.reader().json().with_options(options).to_writer(writer)
+                text.reader()
+                    .json()
+                    .with_options(options)
+                    .to_writer(&mut writer)
             }
             Some("eu5" | "ck3" | "rome" | "v3") => {
                 let file = jomini::envelope::JominiFile::from_slice(&data)?;
@@ -157,11 +169,17 @@ impl JsonCommand {
 
                 let all = txt.body().get_ref().get_ref().as_slice();
                 let body = &all[txt.body().content_offset() as usize..];
-                let tape = TextTape::from_slice(body)?;
+                let (tape, errors) = parse_tape(body).into_parts();
+                // Positions are in the melted text, not in the save file
+                let syntax = check_syntax(body, &errors)
+                    .map_err(|e| anyhow!("{} (melted):{}", self.file.display(), e))?;
+                for warning in syntax {
+                    eprintln!("warning: {} (melted):{}", self.file.display(), warning);
+                }
                 tape.utf8_reader()
                     .json()
                     .with_options(options)
-                    .to_writer(writer)
+                    .to_writer(&mut writer)
             }
             Some("hoi4") => {
                 let file = Hoi4File::from_slice(&data)?;
@@ -176,35 +194,58 @@ impl JsonCommand {
                     Hoi4ParsedText::from_slice(&data)?
                 };
 
-                text.reader().json().with_options(options).to_writer(writer)
+                text.reader()
+                    .json()
+                    .with_options(options)
+                    .to_writer(&mut writer)
             }
             _ => {
                 let encoding = parse_encoding(&self.format)?;
 
-                if self.interpolation {
-                    let tape = jomini::TextTape::from_slice(&data)?;
-                    let interpolated_tape =
-                        InterpolatedTape::from_tape_with_interpolation(&tape, encoding)
-                            .map_err(|e| anyhow::Error::msg(e.to_string()))?;
-                    interpolated_tape.to_writer_with_options(writer, options, encoding)
+                let warn = |warning: &str| {
+                    eprintln!("warning: {}:{}", self.file.display(), warning);
+                };
+                let (tape, errors) = parse_tape(&data).into_parts();
+                let syntax = check_syntax(&data, &errors)
+                    .map_err(|e| anyhow!("{}:{}", self.file.display(), e))?;
+                syntax.iter().for_each(|x| warn(x));
+
+                let interpolated;
+                let rewritten;
+                let tokens = if self.interpolation {
+                    let (scope, warnings) = load_variables(&self.variables, encoding)?;
+                    for warning in &warnings {
+                        eprintln!("warning: {}", warning);
+                    }
+                    interpolated = interpolate(&data, &scope, encoding);
+                    interpolated.warnings.iter().for_each(|x| warn(x));
+                    rewritten = interpolated.apply(&tape);
+                    rewritten.as_slice()
                 } else {
-                    let tape = TextTape::from_slice(&data)?;
-                    match encoding {
-                        Encoding::Utf8 => tape
-                            .utf8_reader()
+                    tape.tokens()
+                };
+                match encoding {
+                    Encoding::Utf8 => ObjectReader::from_tokens(tokens, Utf8Encoding::new())
+                        .json()
+                        .with_options(options)
+                        .to_writer(&mut writer),
+                    Encoding::Windows1252 => {
+                        ObjectReader::from_tokens(tokens, Windows1252Encoding::new())
                             .json()
                             .with_options(options)
-                            .to_writer(writer),
-                        Encoding::Windows1252 => tape
-                            .windows1252_reader()
-                            .json()
-                            .with_options(options)
-                            .to_writer(writer),
+                            .to_writer(&mut writer)
                     }
                 }
             }
         };
 
-        Ok(0)
+        // `to_writer` does not flush, and a `BufWriter` drop discards errors
+        let written = written.and_then(|()| writer.flush());
+
+        // A closed pipe, as with `rakaly json ... | head`, is not a failure
+        match written {
+            Err(e) if e.kind() != std::io::ErrorKind::BrokenPipe => Err(e.into()),
+            _ => Ok(0),
+        }
     }
 }
