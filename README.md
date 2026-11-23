@@ -102,7 +102,7 @@ Output:
 {"position":{"x":20,"y":10}}
 ```
 
-Variable definitions are removed from the output, and string variables are substituted as well as numbers. A variable that can't be resolved is left as written and reported as a warning on stderr. Variables inside `[[param] ... ]` blocks and `[ ... ]` expressions are left as written without a warning.
+Variable definitions are removed from the output. A variable that can't be resolved is left as written and reported as a warning on stderr. Variables inside `[[param] ... ]` blocks and `[ ... ]` expressions are left as written without a warning.
 
 Variables resolve in source order: a definition applies from its position, and can use the previous value (`@x = @[x + 1]`).
 
