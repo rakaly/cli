@@ -86,7 +86,7 @@ rakaly json --format windows-1252 achievements.txt
 The `json` command supports variable interpolation.
 
 ```bash
-rakaly json --interpolation --format utf8 config.txt
+rakaly json --interpolation --format utf-8 config.txt
 ```
 
 Input:
@@ -100,6 +100,18 @@ Output:
 
 ```json
 {"position":{"x":20,"y":10}}
+```
+
+Variable definitions are removed from the output, and string variables are substituted as well as numbers. A variable that can't be resolved is left as written and reported as a warning on stderr. Variables inside `[[param] ... ]` blocks and `[ ... ]` expressions are left as written without a warning.
+
+Variables resolve in source order: a definition applies from its position, and can use the previous value (`@x = @[x + 1]`).
+
+A file can use variables that other files define. Pass those files with `--variables` (repeatable). They are read in the order given, before the input file.
+
+```bash
+rakaly json --interpolation --format utf-8 \
+  --variables game/common/great_projects/types/00_great_project_types.txt \
+  game/common/great_projects/types/01_pam_projects.txt
 ```
 
 ### Watch and archive saves

@@ -376,6 +376,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37909eebbb50d72f9059c3b6d82c0463f2ff062c9e95845c43a6c9c0355411be"
 
 [[package]]
+name = "fearless_simd"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "629c9d6b6f30b5604089e0980f4d924a013aacb1654a6cdf5d3d852224f68651"
+
+[[package]]
 name = "filetime"
 version = "0.2.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -685,10 +691,11 @@ dependencies = [
 
 [[package]]
 name = "jomini"
-version = "0.38.0"
+version = "0.38.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f871f2204fb8dfc02da4e5d4823f06aff062cfba7b8f5d079c98dee956ea9a0"
+checksum = "59e83c12e7fd3a731919882639bf35936a7917a828e6597d78ab0a3c6c6aa28f"
 dependencies = [
+ "fearless_simd",
  "flate2",
  "itoa",
  "jomini_derive",
