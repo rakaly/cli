@@ -94,3 +94,23 @@ fn test_json_windows1252() {
     let actual = std::str::from_utf8(&out.stdout).unwrap();
     assert_eq!(r#"{"a":"b","a":1}"#, actual);
 }
+
+#[test]
+fn test_json_plaintext_saves() {
+    for (file, expected) in [
+        ("json.eu4", r#"{"name":"José","cache":[[],["YMN"],[]]}"#),
+        (
+            "json.hoi4",
+            r#"{"name":"José","sprite":".","pools":[[],[1],[]]}"#,
+        ),
+    ] {
+        let assert = Command::cargo_bin("rakaly")
+            .unwrap()
+            .arg("json")
+            .arg(Path::new("tests").join("fixtures").join(file))
+            .assert()
+            .success();
+        let out = assert.get_output();
+        assert_eq!(std::str::from_utf8(&out.stdout).unwrap(), expected);
+    }
+}
