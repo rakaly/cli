@@ -1,19 +1,20 @@
 use anyhow::anyhow;
 use argh::FromArgs;
 use ck3save::Ck3Melt;
-use eu4save::{file::Eu4ParsedText, Eu4File};
+use eu4save::{flavor::Eu4Flavor, Eu4File};
 use eu5save::Eu5Melt;
-use hoi4save::{file::Hoi4ParsedText, Hoi4File};
+use hoi4save::Hoi4File;
 use imperator_save::ImperatorMelt;
 use jomini::{
     envelope::{JominiFileKind, SaveDataKind},
     json::{DuplicateKeyMode, JsonOptions},
-    text::{syntax::parse_tape, ObjectReader},
+    text::syntax::{parse, parse_with, Hoi4Flavor, Parse},
     Utf8Encoding, Windows1252Encoding,
 };
 use std::{
+    borrow::Cow,
     io::{BufWriter, Cursor, Write},
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 use vic3save::Vic3Melt;
 
@@ -70,12 +71,51 @@ pub enum Encoding {
     Windows1252,
 }
 
+impl jomini::Encoding for Encoding {
+    fn decode<'a>(&self, data: &'a [u8]) -> Cow<'a, str> {
+        match self {
+            Encoding::Utf8 => Utf8Encoding::decode(data),
+            Encoding::Windows1252 => Windows1252Encoding::decode(data),
+        }
+    }
+}
+
 fn parse_encoding(s: &str) -> anyhow::Result<Encoding> {
     match s.to_lowercase().as_str() {
         "utf-8" => Ok(Encoding::Utf8),
         "windows-1252" => Ok(Encoding::Windows1252),
         _ => Err(anyhow!("Unrecognized encoding option")),
     }
+}
+
+/// The syntax parser panics on a file that a `u32` can't index
+pub fn check_size(data: &[u8]) -> anyhow::Result<()> {
+    if data.len() as u64 > u64::from(u32::MAX) {
+        return Err(anyhow!("text is 4 GiB or larger"));
+    }
+    Ok(())
+}
+
+/// Print the recoverable syntax errors of `parsed` and fail on the others.
+fn report_syntax(parsed: &Parse, name: &str) -> anyhow::Result<()> {
+    let data = parsed.tree().source();
+    let warnings = check_syntax(data, parsed.errors()).map_err(|e| anyhow!("{}:{}", name, e))?;
+    for warning in warnings {
+        eprintln!("warning: {}:{}", name, warning);
+    }
+    Ok(())
+}
+
+/// Drop the `EU4txt` or `HOI4txt` header
+fn strip_header<'a>(data: &'a [u8], header: &str) -> anyhow::Result<&'a [u8]> {
+    data.strip_prefix(header.as_bytes())
+        .ok_or_else(|| anyhow!("Expected text to start with {}", header))
+}
+
+/// Positions in melted text are not positions in the save file
+fn text_name(file: &Path, melted: bool) -> String {
+    let suffix = if melted { " (melted)" } else { "" };
+    format!("{}{}", file.display(), suffix)
 }
 
 impl JsonCommand {
@@ -108,18 +148,24 @@ impl JsonCommand {
         let written = match extension {
             Some("eu4") => {
                 let file = Eu4File::from_slice(&data)?;
-                let mut out = Cursor::new(Vec::new());
-                let text = if file.encoding().is_binary() || file.encoding().is_zip() {
+                let melted = file.encoding().is_binary() || file.encoding().is_zip();
+                let mut out = Vec::new();
+                let text = if melted {
                     let options = eu4save::MeltOptions::new()
                         .on_failed_resolve(strategy)
                         .verbatim(verbatim);
                     file.melt(options, eu4_tokens_resolver(), &mut out)?;
-                    Eu4ParsedText::from_slice(out.get_ref().as_slice())?
+                    out.as_slice()
                 } else {
-                    Eu4ParsedText::from_slice(&data)?
+                    data.as_slice()
                 };
 
-                text.reader()
+                let body = strip_header(text, "EU4txt")?;
+                check_size(body)?;
+                let parsed = parse(body);
+                report_syntax(&parsed, &text_name(&self.file, melted))?;
+                parsed
+                    .document(Eu4Flavor::new())
                     .json()
                     .with_options(options)
                     .to_writer(&mut writer)
@@ -169,32 +215,35 @@ impl JsonCommand {
 
                 let all = txt.body().get_ref().get_ref().as_slice();
                 let body = &all[txt.body().content_offset() as usize..];
-                let (tape, errors) = parse_tape(body).into_parts();
-                // Positions are in the melted text, not in the save file
-                let syntax = check_syntax(body, &errors)
-                    .map_err(|e| anyhow!("{} (melted):{}", self.file.display(), e))?;
-                for warning in syntax {
-                    eprintln!("warning: {} (melted):{}", self.file.display(), warning);
-                }
-                tape.utf8_reader()
+                check_size(body)?;
+                let parsed = parse(body);
+                report_syntax(&parsed, &text_name(&self.file, true))?;
+                parsed
+                    .document(Utf8Encoding::new())
                     .json()
                     .with_options(options)
                     .to_writer(&mut writer)
             }
             Some("hoi4") => {
                 let file = Hoi4File::from_slice(&data)?;
-                let mut out = Cursor::new(Vec::new());
-                let text = if !matches!(file.encoding(), hoi4save::Encoding::Plaintext) {
+                let melted = !matches!(file.encoding(), hoi4save::Encoding::Plaintext);
+                let mut out = Vec::new();
+                let text = if melted {
                     let options = hoi4save::MeltOptions::new()
                         .on_failed_resolve(strategy)
                         .verbatim(verbatim);
                     file.melt(options, hoi4_tokens_resolver(), &mut out)?;
-                    Hoi4ParsedText::from_slice(out.get_ref().as_slice())?
+                    out.as_slice()
                 } else {
-                    Hoi4ParsedText::from_slice(&data)?
+                    data.as_slice()
                 };
 
-                text.reader()
+                let body = strip_header(text, "HOI4txt")?;
+                check_size(body)?;
+                let parsed = parse_with(body, &Hoi4Flavor);
+                report_syntax(&parsed, &text_name(&self.file, melted))?;
+                parsed
+                    .document(Utf8Encoding::new())
                     .json()
                     .with_options(options)
                     .to_writer(&mut writer)
@@ -202,39 +251,30 @@ impl JsonCommand {
             _ => {
                 let encoding = parse_encoding(&self.format)?;
 
-                let warn = |warning: &str| {
-                    eprintln!("warning: {}:{}", self.file.display(), warning);
-                };
-                let (tape, errors) = parse_tape(&data).into_parts();
-                let syntax = check_syntax(&data, &errors)
-                    .map_err(|e| anyhow!("{}:{}", self.file.display(), e))?;
-                syntax.iter().for_each(|x| warn(x));
+                check_size(&data)?;
+                let parsed = parse(&data);
+                report_syntax(&parsed, &text_name(&self.file, false))?;
 
-                let interpolated;
-                let rewritten;
-                let tokens = if self.interpolation {
+                if self.interpolation {
                     let (scope, warnings) = load_variables(&self.variables, encoding)?;
                     for warning in &warnings {
                         eprintln!("warning: {}", warning);
                     }
-                    interpolated = interpolate(&data, &scope, encoding);
-                    interpolated.warnings.iter().for_each(|x| warn(x));
-                    rewritten = interpolated.apply(&tape);
-                    rewritten.as_slice()
-                } else {
-                    tape.tokens()
-                };
-                match encoding {
-                    Encoding::Utf8 => ObjectReader::from_tokens(tokens, Utf8Encoding::new())
+                    let interpolated = interpolate(&parsed, &scope, encoding)?;
+                    for warning in &interpolated.warnings {
+                        eprintln!("warning: {}:{}", self.file.display(), warning);
+                    }
+                    interpolated
+                        .block
                         .json()
                         .with_options(options)
-                        .to_writer(&mut writer),
-                    Encoding::Windows1252 => {
-                        ObjectReader::from_tokens(tokens, Windows1252Encoding::new())
-                            .json()
-                            .with_options(options)
-                            .to_writer(&mut writer)
-                    }
+                        .to_writer(&mut writer)
+                } else {
+                    parsed
+                        .document(encoding)
+                        .json()
+                        .with_options(options)
+                        .to_writer(&mut writer)
                 }
             }
         };

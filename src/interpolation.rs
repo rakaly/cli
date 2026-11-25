@@ -1,20 +1,13 @@
 //! Variable interpolation for game and mod files.
-//!
-//! jomini resolves `@name` variables and `@[ ... ]` calculations on the
-//! syntax tree, but its JSON writer reads a tape. So this module applies the
-//! resolution to the tape of the same source, matching the two by offset.
-//! Once jomini can write a resolved `OwnedBlock` as JSON, [`Interpolated`]
-//! can go.
 
-use crate::json::Encoding;
+use crate::json::{check_size, Encoding};
 use jomini::text::syntax::{
+    de::Document,
     parse,
-    resolve::{resolve_with, Resolution, Resolvable, ResolvedScalar, Variables},
-    Item, LineIndex, SyntaxError, SyntaxErrorKind, TextRange, Value,
+    resolve::{resolve_with, Resolution, Variables},
+    LineIndex, OwnedBlock, OwnedItem, OwnedValue, Parse, SyntaxError, SyntaxErrorKind, TextRange,
 };
 use jomini::text::Operator;
-use jomini::{Scalar, TextTape, TextToken, Utf8Encoding, Windows1252Encoding};
-use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
 /// Collect the variables of `files`, with a warning for each definition that
@@ -28,6 +21,7 @@ pub fn load_variables(
     for file in files {
         let context = |e: &dyn std::fmt::Display| anyhow::anyhow!("{}: {}", file.display(), e);
         let data = std::fs::read(file).map_err(|e| context(&e))?;
+        check_size(&data).map_err(|e| context(&e))?;
         let parsed = parse(&data);
         let mut messages = check_syntax(&data, parsed.errors()).map_err(|e| context(&e))?;
 
@@ -47,150 +41,54 @@ pub fn load_variables(
     Ok((variables, warnings))
 }
 
-/// How to change the tape of a source.
-pub struct Interpolated<'a> {
-    data: &'a [u8],
-    /// The value of each token to replace, by the offset of the token.
-    values: HashMap<usize, ResolvedScalar>,
-    /// The offset of the key of each definition to remove.
-    definitions: HashSet<usize>,
+/// A file with its variables resolved.
+pub struct Interpolated {
+    /// The file with each definition removed, each reference replaced by its
+    /// value, and `?=` and `==` as `=`.
+    pub block: OwnedBlock,
     /// Variables and calculations that have no value, as `line:col: message`.
     pub warnings: Vec<String>,
 }
 
-/// Interpolate `data`. A variable that `data` does not define yet comes from
+/// Interpolate `parsed`. A variable that it does not define yet comes from
 /// `scope`.
-pub fn interpolate<'a>(data: &'a [u8], scope: &Variables, encoding: Encoding) -> Interpolated<'a> {
-    let parsed = parse(data);
-    let resolution = resolve_with(parsed.tree(), scope);
-    let mut out = Interpolated {
-        data,
-        values: HashMap::new(),
-        definitions: HashSet::new(),
-        warnings: resolve_messages(&resolution, data, encoding),
-    };
-    out.collect_items(parsed.ast().items(), &resolution);
-    out
+pub fn interpolate(
+    parsed: &Parse,
+    scope: &Variables,
+    encoding: Encoding,
+) -> anyhow::Result<Interpolated> {
+    let tree = parsed.tree();
+    let resolution = resolve_with(tree, scope);
+    let warnings = resolve_messages(&resolution, tree.source(), encoding);
+    let mut block: OwnedBlock = Document::new(tree, encoding)
+        .with_resolution(resolution)?
+        .deserialize()?;
+    normalize_operators(&mut block);
+    Ok(Interpolated { block, warnings })
 }
 
-impl<'a> Interpolated<'a> {
-    /// The tokens of `tape`, the tape of the same source, with each
-    /// definition removed, each reference replaced by its value, and `?=` and
-    /// `==` as `=`.
-    pub fn apply<'s>(&'s self, tape: &'s TextTape<'a>) -> Vec<TextToken<'s>> {
-        let mut out: Vec<TextToken<'s>> = Vec::with_capacity(tape.tokens().len());
-        // The index in `out` of each open container
-        let mut open = Vec::new();
-        let mut tokens = tape.tokens().iter().peekable();
-        while let Some(token) = tokens.next() {
-            let offset = self.offset(token);
-            if offset.is_some_and(|x| self.definitions.contains(&x)) {
-                tokens.next_if(|x| matches!(x, TextToken::Operator(_)));
-                tokens.next();
-                continue;
-            }
-
-            let value = offset.and_then(|x| self.values.get(&x));
-            let token = match (token, value) {
-                (TextToken::Header(_), Some(value)) if value.is_quoted() => {
-                    TextToken::QuotedHeader(value.as_scalar())
-                }
-                (TextToken::Header(_), Some(value)) => TextToken::Header(value.as_scalar()),
-                (_, Some(value)) if value.is_quoted() => TextToken::Quoted(value.as_scalar()),
-                (_, Some(value)) => TextToken::Unquoted(value.as_scalar()),
-                (TextToken::Operator(Operator::Exact | Operator::Exists), _) => {
-                    TextToken::Operator(Operator::Equal)
-                }
-                (TextToken::Array { .. } | TextToken::Object { .. }, _) => {
-                    open.push(out.len());
-                    token.clone()
-                }
-                (TextToken::MixedContainer, _) => {
-                    // An object that held only definitions before its values,
-                    // as in `{ @x = 1 @x 2 }`, is an array
-                    if let Some(&start) = open.last() {
-                        if start + 1 == out.len() && matches!(out[start], TextToken::Object { .. })
-                        {
-                            out[start] = TextToken::Array {
-                                end: 0,
-                                mixed: true,
-                            };
-                        }
+/// Write `?=` and `==` as `=`. Blocks can nest deep, so this does not recurse.
+fn normalize_operators(root: &mut OwnedBlock) {
+    let mut blocks = vec![root];
+    while let Some(block) = blocks.pop() {
+        for item in block.items_mut() {
+            let value = match item {
+                OwnedItem::Field(field) => {
+                    if matches!(field.op, Some(Operator::Exact | Operator::Exists)) {
+                        field.op = Some(Operator::Equal);
                     }
-                    token.clone()
+                    &mut field.value
                 }
-                (TextToken::End(_), _) => {
-                    let start = open.pop().expect("balanced tape");
-                    let index = out.len();
-                    if let TextToken::Array { end, .. } | TextToken::Object { end, .. } =
-                        &mut out[start]
-                    {
-                        *end = index;
-                    }
-                    TextToken::End(start)
+                OwnedItem::Value(value) => value,
+                OwnedItem::Parameter(parameter) => {
+                    blocks.push(&mut parameter.body);
+                    continue;
                 }
-                _ => token.clone(),
+                _ => continue,
             };
-            out.push(token);
-        }
-        out
-    }
-
-    /// Where the scalar of `token` starts in the source.
-    fn offset(&self, token: &TextToken) -> Option<usize> {
-        let scalar: &Scalar = match token {
-            TextToken::Unquoted(x) | TextToken::Header(x) if !x.as_bytes().is_empty() => x,
-            _ => return None,
-        };
-        let base = self.data.as_ptr() as usize;
-        (scalar.as_bytes().as_ptr() as usize).checked_sub(base)
-    }
-
-    fn collect_items<'t>(
-        &mut self,
-        items: impl Iterator<Item = Item<'t, 'a>>,
-        resolution: &Resolution,
-    ) {
-        for item in items {
-            match item {
-                // As for the resolver, any operator makes a definition
-                Item::Field(field)
-                    if field.is_variable_definition()
-                        && matches!(
-                            field.value(),
-                            Some(Value::Scalar(_) | Value::Calc(_) | Value::ReaderDirective(_))
-                        ) =>
-                {
-                    self.definitions.insert(start(field.key().text_range()));
-                }
-                Item::Field(field) => {
-                    // `@@name = value`
-                    self.substitute(field.key(), field.key().text_range(), resolution);
-                    if let Some(value) = field.value() {
-                        self.collect_value(value, resolution);
-                    }
-                }
-                Item::Value(value) => self.collect_value(value, resolution),
-                _ => {}
+            if let OwnedValue::Block(block) | OwnedValue::HeaderedBlock(_, block) = value {
+                blocks.push(block);
             }
-        }
-    }
-
-    fn collect_value<'t>(&mut self, value: Value<'t, 'a>, resolution: &Resolution) {
-        match value {
-            Value::Block(block) => self.collect_items(block.items(), resolution),
-            Value::HeaderedBlock(block) => {
-                let header = block.header();
-                self.substitute(header, header.text_range(), resolution);
-                self.collect_items(block.block().items(), resolution)
-            }
-            _ => self.substitute(value, value.text_range(), resolution),
-        }
-    }
-
-    fn substitute(&mut self, at: impl Resolvable, range: TextRange, resolution: &Resolution) {
-        if let Some(value) = resolution.get(at) {
-            self.values.insert(start(range), value.clone());
         }
     }
 }
@@ -228,10 +126,7 @@ fn resolve_messages(resolution: &Resolution, data: &[u8], encoding: Encoding) ->
     errors
         .map(|error| {
             let text = &data[start(error.range)..u32::from(error.range.end()) as usize];
-            let text = match encoding {
-                Encoding::Utf8 => Utf8Encoding::decode(text),
-                Encoding::Windows1252 => Windows1252Encoding::decode(text),
-            };
+            let text = jomini::Encoding::decode(&encoding, text);
             let position = position(&lines, error.range);
             format!("{}: {} `{}`", position, error.message(), text)
         })
@@ -251,7 +146,12 @@ fn position(lines: &LineIndex, range: TextRange) -> String {
 mod tests {
     use super::*;
     use jomini::json::{DuplicateKeyMode, JsonOptions};
-    use jomini::text::{syntax::parse_tape, ObjectReader};
+
+    fn interpolate(data: &[u8], scope: &Variables, encoding: Encoding) -> Interpolated {
+        let parsed = parse(data);
+        check_syntax(data, parsed.errors()).unwrap();
+        super::interpolate(&parsed, scope, encoding).unwrap()
+    }
 
     fn to_json_with(data: &[u8], options: JsonOptions) -> String {
         to_json_scope(data, &Variables::new(), options)
@@ -264,12 +164,7 @@ mod tests {
     }
 
     fn json_with(out: &Interpolated, options: JsonOptions) -> String {
-        let (tape, errors) = parse_tape(out.data).into_parts();
-        check_syntax(out.data, &errors).unwrap();
-        ObjectReader::from_tokens(&out.apply(&tape), Utf8Encoding::new())
-            .json()
-            .with_options(options)
-            .to_string()
+        out.block.json().with_options(options).to_string()
     }
 
     fn json_of(out: &Interpolated) -> String {
@@ -527,11 +422,8 @@ test_obj = {
     #[test]
     fn test_windows1252_bytes_are_kept() {
         let data = b"@n = \"Jos\xe9\"\nruler = @n";
-        let out = interpolate(data, &Variables::new(), Encoding::Utf8);
-        let (tape, _) = parse_tape(data).into_parts();
-        let json = ObjectReader::from_tokens(&out.apply(&tape), Windows1252Encoding::new())
-            .json()
-            .to_string();
+        let out = interpolate(data, &Variables::new(), Encoding::Windows1252);
+        let json = json_of(&out);
         assert_eq!(json, r#"{"ruler":"José"}"#);
     }
 
@@ -736,12 +628,14 @@ a = @n"#;
     #[test]
     fn test_blocks_keep_their_shape() {
         for (data, expected) in [
-            ("x = { @w = 1 size { 2 3 } }", r#"{"x":{"size":[2,3]}}"#),
-            ("x = { @n = 1 a { b = 2 } }", r#"{"x":{"a":{"b":2}}}"#),
-            ("x = { @a = 1 }", r#"{"x":{}}"#),
+            // As without the definition: the first entry has no operator
+            ("x = { @w = 1 size { 2 3 } }", r#"{"x":[{"size":[2,3]}]}"#),
+            ("x = { @n = 1 a { b = 2 } }", r#"{"x":[{"a":{"b":2}}]}"#),
+            ("x = { @n = 1 a = { b = 2 } }", r#"{"x":{"a":{"b":2}}}"#),
+            ("x = { @a = 1 }", r#"{"x":[]}"#),
             ("x = { 1 @a = 2 @a 3 }", r#"{"x":[1,2,3]}"#),
             ("x = { @a = 2 @a 3 }", r#"{"x":[2,3]}"#),
-            ("@x = rgb\na = @x { @y = 1 }", r#"{"a":{"rgb":{}}}"#),
+            ("@x = rgb\na = @x { @y = 1 }", r#"{"a":"rgb"}"#),
         ] {
             assert_eq!(to_json(data.as_bytes()), expected, "{}", data);
         }
@@ -751,6 +645,15 @@ a = @n"#;
     fn test_operators_in_parameter_block() {
         let data = b"t = { [[p] b ?= 3 c == 4] }";
         assert_eq!(to_json(data), r#"{"t":{"[p]":{"b":3,"c":4}}}"#);
+    }
+
+    #[test]
+    fn test_operators_in_nested_blocks() {
+        let data = b"a = { { b ?= 1 } rgb { c == 2 } } d = hsv { e ?= { f == 3 } }";
+        assert_eq!(
+            to_json(data),
+            r#"{"a":[{"b":1},{"rgb":{"c":2}}],"d":{"hsv":{"e":{"f":3}}}}"#
+        );
     }
 
     #[test]
@@ -812,10 +715,8 @@ condition = @[threshold / 2]
     fn test_definitions() {
         for (data, expected) in [
             // As in jomini, any operator makes a definition
-            ("@x = 5\nb = { @x < 3 }\na = @x", r#"{"b":{},"a":3}"#),
+            ("@x = 5\nb = { @x < 3 }\na = @x", r#"{"b":[],"a":3}"#),
             ("@x ?= 5\na = @x", r#"{"a":5}"#),
-            // Not a value that a variable can have
-            ("@x = { 1 2 }\na = @x", r#"{"@x":[1,2],"a":"@x"}"#),
             (
                 "@:register_variable x = 2\na = @:load_variable x",
                 r#"{"a":2}"#,
